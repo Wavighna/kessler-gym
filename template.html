@@ -246,6 +246,61 @@ button.big .play { width:0; height:0; border-left:12px solid currentColor; borde
 @media(max-width:900px){ .hero { grid-template-columns:1fr; } .steps3,.takeaway { grid-template-columns:1fr; } .steps3 > div { border-right:0; border-bottom:1px solid var(--line); } }
 @media(max-width:600px){ .tour-card { right:16px; left:16px; bottom:16px; width:auto; } .tour-card.center { left:16px; right:16px; bottom:50%; transform:translateY(50%); width:auto; } }
 
+/* Flow layer: no hairline boxes. Soft glass surfaces on a drifting aurora, pill controls, generous curves. */
+:root { --line:#1b262d; --glass:linear-gradient(160deg,rgba(255,255,255,.045),rgba(255,255,255,.012) 60%); }
+html, body { background:#070b0e; }
+body { position:relative; overflow-x:hidden; }
+body:before, body:after { content:""; position:fixed; z-index:-1; border-radius:50%; filter:blur(90px); opacity:.55; pointer-events:none; }
+body:before { width:70vw; height:60vw; left:-20vw; top:-25vw; background:radial-gradient(circle,#0f3b45 0%,transparent 65%); animation:drift 26s ease-in-out infinite alternate; }
+body:after { width:60vw; height:55vw; right:-22vw; top:35vh; background:radial-gradient(circle,#1a2a55 0%,transparent 65%); animation:drift 32s ease-in-out infinite alternate-reverse; }
+@keyframes drift { from { transform:translate(0,0) scale(1); } to { transform:translate(6vw,4vh) scale(1.12); } }
+.wrap { gap:44px; }
+.topbar { border:0; }
+.panel, .tiles, .steps3, .research, .scorecard { border:0 !important; background:var(--glass); border-radius:32px; box-shadow:0 30px 80px -40px rgba(0,0,0,.8), inset 0 1px 0 rgba(255,255,255,.05); }
+.panel { padding:28px; }
+.research-body > .panel { background:rgba(255,255,255,.02); }
+#globe { border-radius:24px; background:transparent; }
+.globe-caption, .decision, .controller-foot, .research[open] > summary { border:0 !important; }
+.decision { padding-bottom:4px; }
+.tiles { padding:22px 8px; }
+.tile { border:0 !important; text-align:center; }
+.tile .v { font-size:26px; }
+.steps3 { background:none; box-shadow:none; backdrop-filter:none; -webkit-backdrop-filter:none; position:relative; gap:24px; overflow:visible; }
+.steps3:before { content:""; position:absolute; left:8%; right:8%; top:21px; height:2px; background:linear-gradient(90deg,transparent,rgba(235,189,120,.5),rgba(141,224,188,.5),transparent); border-radius:2px; }
+.steps3 > div { border:0 !important; flex-direction:column; align-items:center; text-align:center; padding:0 12px; position:relative; }
+.steps3 b { width:44px; height:44px; font-size:15px; background:radial-gradient(circle at 35% 30%,#2b3f3a,#0e1714); border:0; box-shadow:0 0 0 6px #070b0e, 0 0 24px rgba(141,224,188,.25); }
+.steps3 h4 { font-size:16px; margin-top:12px; }
+.steps3 p { max-width:30ch; }
+.seg { border:0; border-radius:999px; background:rgba(255,255,255,.04); padding:4px; }
+.seg button, button { border-radius:999px; }
+button { border:0; background:rgba(255,255,255,.06); }
+button:hover { background:rgba(255,255,255,.11); }
+button.big { border-radius:999px; padding:18px 30px; }
+.controller-panel { border-radius:999px; padding:14px 26px; }
+.controller-foot { padding-top:0; }
+.control-divider { display:none; }
+.status { border:0; border-radius:999px; background:rgba(255,255,255,.05); }
+th, td { border-bottom:1px solid rgba(255,255,255,.045); }
+tbody tr:last-child td { border-bottom:0; }
+.bar { background:rgba(255,255,255,.06); }
+.takeaway { gap:20px; }
+.takeaway div { border:0; border-radius:28px; background:var(--glass); padding:24px 26px; }
+.takeaway strong { font-size:32px; }
+.insight-note { border:0; border-radius:20px; }
+pre.eq { border:0; border-radius:18px; background:rgba(255,255,255,.035); }
+.research > summary { padding:24px 30px; }
+.tour-card { border:0; border-radius:28px; background:rgba(13,20,24,.92); backdrop-filter:blur(18px); -webkit-backdrop-filter:blur(18px); box-shadow:0 30px 80px rgba(0,0,0,.65), inset 0 1px 0 rgba(255,255,255,.06); }
+.tour-spot { border-radius:36px; outline:0; box-shadow:0 0 0 9999px rgba(3,6,9,.72), 0 0 0 2px rgba(235,189,120,.75), 0 0 40px rgba(235,189,120,.35); }
+.tour-live { border:0; border-radius:16px; }
+.toast { border:0 !important; border-radius:20px; }
+.toast.ok { background:#123527 !important; } .toast.bad { background:#3a1418 !important; }
+.takeaway span span { display:inline; margin:0; }
+body:before, body:after { opacity:.9; }
+.footer { opacity:.7; }
+@media(max-width:900px){ .steps3:before { display:none; } .steps3 { gap:28px; } .controller-panel { border-radius:28px; } }
+@media(max-width:760px){ .tile { border:0 !important; } }
+@media(prefers-reduced-motion:reduce){ body:before, body:after, button.big { animation:none; } }
+
 </style>
 
 <div class="wrap">
@@ -255,18 +310,18 @@ button.big .play { width:0; height:0; border-left:12px solid currentColor; borde
     <span class="demo-badge">Live simulation · runs in your browser</span>
   </nav>
   <header class="hero">
-    <div><p class="eyebrow">Autonomous collision avoidance for satellites</p><h1>An AI that teaches satellites to <em>dodge space junk.</em></h1><p class="sub">Low Earth orbit has 10,000+ active satellites and tens of thousands of tracked debris pieces. One collision at 10 km/s creates thousands more: <b>Kessler syndrome</b>. Kessler is a physics simulator plus a reinforcement-learning pilot that decides <b>when</b> to fire thrusters, <b>which way</b>, and <b>how to get back</b> into its orbit, using as little fuel as possible.</p></div>
+    <div><p class="eyebrow">Autonomous collision avoidance for satellites</p><h1>An AI that teaches satellites to <em>dodge space junk.</em></h1><p class="sub">One collision at 10 km/s makes thousands more pieces of junk. Our AI pilot learns <b>when</b> to burn, <b>which way</b>, and <b>how to get home</b>.</p></div>
     <div class="hero-cta">
       <button class="primary big" data-tour><span class="play" aria-hidden="true"></span>Watch the 60-second guided demo</button>
-      <span class="hero-hint">or scroll down and fly it yourself: pick a pilot and press Replay</span>
+      <span class="hero-hint">or scroll down and fly it yourself</span>
       <div class="status" id="status" role="status">Initializing simulation…</div>
     </div>
   </header>
 
   <div class="steps3" aria-label="How it works">
-    <div><b>1</b><div><h4>Debris is detected</h4><p>Radar spots an object on a near-collision course 15–60 min out. Its predicted path starts fuzzy and sharpens over time.</p></div></div>
-    <div><b>2</b><div><h4>The AI decides to burn</h4><p>Burn early and it's cheap but based on a guess. Burn late and you know more, but it costs far more fuel. The AI learned this trade-off.</p></div></div>
-    <div><b>3</b><div><h4>Pass safely, return home</h4><p>The satellite passes outside the 200 m safety bubble, then steers back into its assigned slot with fuel to spare.</p></div></div>
+    <div><b>1</b><div><h4>Debris detected</h4><p>A fuzzy prediction, 15–60 min out.</p></div></div>
+    <div><b>2</b><div><h4>AI decides to burn</h4><p>Early is cheap. Late is certain. It learned the balance.</p></div></div>
+    <div><b>3</b><div><h4>Pass safely, return home</h4><p>Outside the 200 m bubble, back to its orbit.</p></div></div>
   </div>
   <span id="mission"></span>
 
@@ -284,7 +339,7 @@ button.big .play { width:0; height:0; border-left:12px solid currentColor; borde
       <button id="replay">Replay</button>
       <label for="speed">Speed <input id="speed" type="range" min="2" max="40" value="8"> <span class="mono" id="speedv">8 min/s</span></label>
     </div>
-    <div class="controller-foot"><p class="note">Switch controllers to replay the same scenario and compare the outcome.</p><span class="mono note" id="seedv"></span></div>
+    <div class="controller-foot"><p class="note">Switch pilots to replay the same scenario.</p><span class="mono note" id="seedv"></span></div>
   </section>
 
       <div class="tiles">
@@ -316,7 +371,7 @@ button.big .play { width:0; height:0; border-left:12px solid currentColor; borde
       </div>
       <canvas id="bplane" aria-label="Predicted satellite miss distance and uncertainty around the debris keep-out zone"></canvas>
       <div class="legend"><span><i style="background: var(--threat)"></i>200 m keep-out zone</span><span><i style="background: var(--amber)"></i>Predicted pass + uncertainty</span><span><i style="background: transparent; border: 1px solid var(--noop)"></i>Pass without avoidance</span></div>
-      <p class="plain">You're looking down the debris's path. <b class="r">Red circle</b> = the debris plus a 200 m safety bubble. <b class="a">Amber dot</b> = where our satellite will pass; the dashed ring is the uncertainty, which shrinks as tracking improves. <b>Goal: keep amber outside red.</b></p>
+      <p class="plain"><b>Goal:</b> keep the <b class="a">amber dot</b> out of the <b class="r">red bubble</b>.</p>
 
     </section>
   </div>
@@ -334,15 +389,15 @@ button.big .play { width:0; height:0; border-left:12px solid currentColor; borde
 
   <section class="panel scorecard" id="scorecard">
     <div class="panel-head"><h3>Mission scorecard: this scenario</h3><span class="note" id="score-seed"></span></div>
-    <p class="plain">Every pilot you fly on the current scenario lands here, so you can compare them side by side. Switch pilots above and the same scenario replays.</p>
+    
     <div class="tablewrap"><table><thead><tr><th>Pilot</th><th>Unsafe passes</th><th>Fuel used (Δv)</th><th>Avg. orbit deviation</th><th>Verdict</th></tr></thead><tbody id="score-body"><tr><td colspan="5" class="empty">Fly a scenario to the end to see its result.</td></tr></tbody></table></div>
   </section>
 
-  <div class="section-label" id="compare"><div><p class="eyebrow">The honest average</p><h3>300 scenarios the AI never trained on.</h3><p class="note">One scenario can be cherry-picked. These are averages over 300 held-out scenarios (about 1,040 close approaches), recomputed live in your browser on every page load.</p></div></div>
+  <div class="section-label" id="compare"><div><p class="eyebrow">The honest average</p><h3>300 scenarios the AI never trained on.</h3><p class="note">Averages over ~1,040 unseen close approaches, computed live.</p></div></div>
   <div class="takeaway" id="takeaway">
-    <div><strong id="tk-ret">—</strong><span>Best overall score of the three pilots (combined safety + fuel + orbit-keeping reward)</span></div>
-    <div><strong id="tk-x">—</strong><span>fewer unsafe passes than doing nothing, learned purely from trial and error</span></div>
-    <div><strong id="tk-slot">—</strong><span>average distance from its assigned orbit, versus <span id="tk-slot-rule">—</span> for the human operator rule</span></div>
+    <div><strong id="tk-ret">—</strong><span>Best overall score vs. the operator rule</span></div>
+    <div><strong id="tk-x">—</strong><span>fewer unsafe passes than doing nothing</span></div>
+    <div><strong id="tk-slot">—</strong><span>from its orbit, vs. <span id="tk-slot-rule">—</span> for the rule</span></div>
   </div>
   <div class="grid evidence-grid">
     <section class="panel" id="benchpanel">
@@ -353,7 +408,7 @@ button.big .play { width:0; height:0; border-left:12px solid currentColor; borde
           <tbody id="bench"></tbody>
         </table>
       </div>
-      <p class="note">Simulated encounters, not live tracking data. Lower violations, fuel use and orbit deviation are better; higher return is better. <b style="color:var(--fg)">Honest caveat:</b> the hand-tuned operator rule still has fewer violations. The AI optimizes the combined objective, and closing that safety gap (residual RL on top of the rule, PPO, longer training) is our next step.</p>
+      <p class="note">Simulated encounters. The operator rule still has fewer violations; closing that gap is next.</p>
     </section>
 
   </div>
@@ -367,7 +422,7 @@ button.big .play { width:0; height:0; border-left:12px solid currentColor; borde
         <span class="note" id="workers"></span>
       </div>
       <canvas id="curve"></canvas>
-      <p class="note">Evolution Strategies (Salimans et al., 2017) with antithetic sampling, centred-rank fitness shaping and Adam. Each worker receives only the parameter vector and integer noise seeds, rebuilds the perturbations locally and returns two numbers, so communication cost is independent of network size. Dashed lines show the baselines' return on the same scale.</p>
+      <p class="note">Evolution Strategies across parallel Web Workers. Dashed lines = baselines.</p>
     </section>
 
   <section class="panel">
@@ -379,20 +434,16 @@ button.big .play { width:0; height:0; border-left:12px solid currentColor; borde
 ÿ = −2nẋ + a_y           (along-track)
 z̈ = −n²z + a_z           (cross-track)
 n = √(μ/r³) = 1.10e-3 rad/s   r = 6,928 km</pre>
-        <p>Propagated with the closed-form CW state-transition matrix Φ(τ), so a 4-hour episode costs microseconds. Debris passes at 2–14 km/s, so each encounter is evaluated in its B-plane: only displacement perpendicular to the relative velocity counts.</p>
+        <p>Closed-form CW propagation; each encounter scored in its B-plane.</p>
       </div>
       <div>
         <h2>Observation and reward</h2>
-        <ul>
-          <li>28-dim observation: own position, velocity, fuel and clock, plus the two most urgent conjunctions.</li>
-          <li>Per conjunction: time to TCA, noisy predicted miss vector, 1σ uncertainty (400 m → 25 m as tracking improves), Pc from the Rice distribution, and the physics-informed sensitivity ∂|miss|/∂Δv = Φᵣᵥ(τ)ᵀ m̂.</li>
-          <li>Reward: −30 per keep-out violation, a Gaussian proximity penalty, −2 per m/s of Δv, and a quadratic slot-keeping cost.</li>
-        </ul>
+        <ul><li>28-dim observation incl. ∂|miss|/∂Δv</li><li>Pc from the Rice distribution</li><li>Penalties: violation, proximity, Δv, slot drift</li></ul>
       </div>
       <div>
         <h2>The trade-off the agent learns</h2>
-        <p>An early burn is cheap because along-track drift grows as 3·Δv·τ, but the miss estimate is still mostly noise. A late burn sees the truth but needs far more Δv. The agent also has to handle overlapping conjunctions, where dodging one object can move it toward the next, and then spend fuel to get back to its slot.</p>
-        <p class="note">Policy: 28→32→32→3 tanh MLP (2,083 parameters) that outputs an impulsive Δv of up to 8 cm/s per axis each minute.</p>
+        <p>Early burns are cheap but uncertain; late burns are certain but costly.</p>
+        <p class="note">28→32→32→3 MLP · 2,083 parameters</p>
       </div>
     </div>
   </section>
@@ -641,9 +692,9 @@ const PRETRAINED = /*__WEIGHTS__*/;
     $('decision-title').textContent = finished ? (bad ? 'Mission review needed' : 'Scenario complete') : pc > 1e-4 ? 'Elevated collision risk' : next ? 'Close approach tracked' : 'Monitoring your orbit';
     $('decision-title').style.color = pc > 1e-4 || (finished && bad) ? COL.threat : COL.fg;
     $('decision-copy').textContent = finished
-      ? ok + ' safely passed · ' + bad + ' unsafe passes. Replay this scenario with another controller to compare the trade-offs.'
-      : next ? POL[polKey].name + ' is controlling this simulated mission. ' + (pc > 1e-4 ? 'Predicted collision probability exceeds the operator threshold of 1 in 10,000.' : 'Watch the predicted pass and uncertainty change as tracking improves.')
-      : 'No detected encounter is active. Monitoring the satellite\'s orbit.';
+      ? ok + ' cleared · ' + bad + ' unsafe. Try another pilot.'
+      : next ? (pc > 1e-4 ? 'Risk above 1 in 10,000.' : POL[polKey].name + ' is flying.')
+      : 'All clear.';
     const st = $('status');
     if (finished) { st.className = 'status ' + (bad ? 'alert' : 'ok'); st.textContent = POL[polKey].name + ': ' + ok + ' cleared, ' + bad + ' violated, Δv ' + env.dvUsed.toFixed(2) + ' m/s'; }
     else if (pc > 1e-4) { st.className = 'status alert'; st.textContent = 'High-risk conjunction · Pc ' + pc.toExponential(1); }
@@ -661,8 +712,8 @@ const PRETRAINED = /*__WEIGHTS__*/;
   function initGlobe() {
     if (!window.THREE) return false;
     const cv = $('globe');
-    const renderer = new THREE.WebGLRenderer({ canvas: cv, antialias: true, alpha: false });
-    renderer.setClearColor(new THREE.Color(COL.ink), 1);
+    const renderer = new THREE.WebGLRenderer({ canvas: cv, antialias: true, alpha: true });
+    renderer.setClearColor(0x000000, 0);
     const scene = new THREE.Scene();
     const camera = new THREE.PerspectiveCamera(38, 16 / 11, 0.01, 100);
     const world = new THREE.Group(); scene.add(world);
@@ -924,16 +975,16 @@ const PRETRAINED = /*__WEIGHTS__*/;
   }
   const done = (k) => () => polKey === k && seed === SHOWCASE && !!finished;
   const TOUR = [
-    { center: true, title: 'Space is getting crowded.', html: '<p>Over 10,000 active satellites and tens of thousands of tracked debris pieces share low Earth orbit. Operators already make <b>tens of thousands of avoidance maneuvers a year</b>, mostly with simple threshold rules and humans in the loop.</p><p>A single collision creates thousands of new fragments: <b>Kessler syndrome</b>. We built an AI pilot that learns to dodge. This 60-second tour shows it working.</p>', next: 'Start the tour' },
-    { target: 'globepanel', title: 'This is low Earth orbit.', html: '<p>Each blue dot is one of <b>6,000 simulated debris objects</b>, animated live on your GPU. The <b style="color:var(--amber)">amber dot</b> is our satellite at 550 km.</p><p>When something is on a near-collision course, a <b style="color:var(--threat)">red marker</b> shows where it is coming from.</p>', enter: () => fly('noop') },
-    { target: 'encounter', title: 'The close-approach radar.', html: '<p>This view looks straight down the debris\'s path. <b style="color:var(--threat)">Red circle</b> = the debris plus a <b>200 m safety bubble</b>. <b style="color:var(--amber)">Amber dot</b> = where we will pass. The dashed ring is how unsure we are, and it <b>shrinks as tracking improves</b>.</p><p>The pilot\'s whole job: <b>keep amber outside red</b>, using as little fuel as possible.</p>' },
-    { target: 'encounter', title: 'Test 1: do nothing.', html: '<p>We fly the same 4-hour scenario three times. First with the thrusters <b>off</b>. Watch the outcome banners pop up as each piece of debris passes.</p>', enter: () => fly('noop'), live: runLive('noop'), gate: done('noop'), wait: 'Flying… (≈15 s)' },
-    { target: 'encounter', title: 'Test 2: the human playbook.', html: '<p>This is how operators do it today: wait until a decision point, and <b>burn if collision probability exceeds 1 in 10,000</b>. Then fly back to the slot.</p><p>It reacts late, so every dodge is expensive. Watch the fuel.</p>', enter: () => fly('rule'), live: runLive('rule'), gate: done('rule'), wait: 'Flying… (≈15 s)' },
-    { target: 'encounter', title: 'Test 3: our AI pilot.', html: '<p>A small neural network (2,083 parameters) trained only by trial and error. Nobody told it the rules. It learned <b>when</b> to burn, <b>which direction</b>, and <b>how to get home</b>.</p>', enter: () => fly('rl'), live: runLive('rl'), gate: done('rl'), wait: 'Flying… (≈15 s)' },
-    { target: 'scorecard', title: 'Same scenario, three pilots.', html: '<p>Doing nothing gets hit. The human rule <b>runs its tank dry</b> and still has an unsafe pass. The AI <b>clears every object</b>, keeps fuel in reserve, and stays far closer to its orbit than the rule (≈290 m vs ≈1.6 km).</p><p>But one scenario can be cherry-picked…</p>' },
-    { target: 'compare', title: 'The honest average.', html: '<p>Across <b>300 scenarios the AI never saw</b> (about 1,040 close approaches, recomputed live as this page loaded), the AI gets the <b>best overall score</b> and <b>7× fewer unsafe passes than doing nothing</b>.</p><p>We\'re upfront: the hand-tuned rule still has fewer violations. Closing that gap is our next step.</p>', enter: () => { running = false; $('play').textContent = 'Play'; } },
-    { target: 'trainpanel', title: 'Watch it learn, live.', html: '<p>Training runs <b>right now in your browser</b> across parallel Web Workers. No server, no GPU cluster. Evolution Strategies from random weights. Watch the solid line climb past both dashed baselines, usually in under a minute.</p>', enter: () => { $('research').open = true; drawCurve(); if (!training) $('train').click(); } },
-    { center: true, title: 'That\'s Kessler.', html: '<p>Real orbital mechanics (Clohessy–Wiltshire dynamics, B-plane risk, Rice-distribution collision probability), a learned pilot, honest baselines, and live distributed training, all in one web page.</p><p>Try it yourself: pick a pilot, hit <b>New scenario</b>, or keep the training running.</p>', next: 'Explore on my own' },
+    { center: true, title: 'Space is getting crowded.', html: '<p>Tens of thousands of objects share low Earth orbit. One crash makes thousands more: <b>Kessler syndrome</b>.</p><p>Here\'s an AI that learns to dodge.</p>', next: 'Start the tour' },
+    { target: 'globepanel', title: 'Low Earth orbit.', html: '<p>6,000 simulated debris objects. <b style="color:var(--amber)">Amber</b> is our satellite. <b style="color:var(--threat)">Red</b> is incoming.</p>', enter: () => fly('noop') },
+    { target: 'encounter', title: 'The close-approach radar.', html: '<p><b style="color:var(--threat)">Red</b> = debris + 200 m safety bubble. <b style="color:var(--amber)">Amber</b> = where we\'ll pass.</p><p>Keep amber out of red.</p>' },
+    { target: 'encounter', title: 'Test 1: do nothing.', html: '<p>Thrusters off. Watch the banners.</p>', enter: () => fly('noop'), live: runLive('noop'), gate: done('noop'), wait: 'Flying… (≈15 s)' },
+    { target: 'encounter', title: 'Test 2: today\'s playbook.', html: '<p>Burn when risk passes 1 in 10,000. It reacts late, so dodges are expensive.</p>', enter: () => fly('rule'), live: runLive('rule'), gate: done('rule'), wait: 'Flying… (≈15 s)' },
+    { target: 'encounter', title: 'Test 3: our AI.', html: '<p>A tiny neural net, trained by trial and error. Nobody told it the rules.</p>', enter: () => fly('rl'), live: runLive('rl'), gate: done('rl'), wait: 'Flying… (≈15 s)' },
+    { target: 'scorecard', title: 'Same scenario, three pilots.', html: '<p>Nothing: hit. Rule: out of fuel, still unsafe. <b>AI: all clear.</b></p>' },
+    { target: 'compare', title: 'The honest average.', html: '<p>On 300 unseen scenarios: <b>best overall score</b>, 7× safer than doing nothing. The rule still wins on violations, and that\'s our next step.</p>', enter: () => { running = false; $('play').textContent = 'Play'; } },
+    { target: 'trainpanel', title: 'Watch it learn, live.', html: '<p>Training from scratch, in your browser. No server.</p>', enter: () => { $('research').open = true; drawCurve(); if (!training) $('train').click(); } },
+    { center: true, title: 'That\'s Kessler.', html: '<p>Real orbital physics, a learned pilot, honest baselines, all in one page.</p>', next: 'Explore on my own' },
   ];
   let tourIdx = -1, spot = null, card = null;
   function tourEnd() {
