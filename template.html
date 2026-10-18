@@ -338,12 +338,30 @@ button.linkish:hover { background:none; color:var(--fg); }
 .steps3:before { transform-origin:left; transform:scaleX(0); transition:transform 1.4s cubic-bezier(.2,.8,.2,1) .2s; }
 .steps3.in:before { transform:scaleX(1); }
 @media(prefers-reduced-motion:reduce){ .reveal { opacity:1; transform:none; filter:none; transition:none; } .steps3:before { transform:none; } }
+
+/* One continuous scroll: every section stays in the page and rises in as you reach it. */
+.scenes { display:flex; flex-direction:column; gap:14vh; }
+.scene { display:flex !important; min-height:0; animation:none !important; padding:0; }
+.scene[data-scene="overview"] { min-height:calc(100vh - 110px); justify-content:center; }
+.scene-nav { display:none !important; }
+.col { display:flex; flex-direction:column; gap:20px; min-width:0; }
+.mission-grid { align-items:start; grid-template-columns:minmax(0,1.4fr) minmax(0,1fr); }
+.reveal { transform:translateY(60px) scale(.97); filter:blur(8px); transition-duration:1s; }
+.scroll-cue { align-self:center; display:flex; flex-direction:column; align-items:center; gap:8px; color:var(--muted); font-size:11px; letter-spacing:.14em; text-transform:uppercase; margin-top:8px; }
+.scroll-cue i { width:22px; height:34px; border-radius:12px; box-shadow:inset 0 0 0 1.5px rgba(255,255,255,.25); position:relative; }
+.scroll-cue i:after { content:""; position:absolute; left:50%; top:7px; width:4px; height:7px; margin-left:-2px; border-radius:2px; background:var(--safe); animation:cue 1.8s ease-in-out infinite; }
+@keyframes cue { 0%{ transform:translateY(0); opacity:1 } 70%{ transform:translateY(10px); opacity:0 } 100%{ opacity:0 } }
+.progress { position:fixed; left:0; top:0; height:3px; width:100%; z-index:60; transform-origin:left; transform:scaleX(0); background:linear-gradient(90deg,var(--amber),var(--safe)); }
+.topbar { position:sticky; top:0; z-index:30; background:linear-gradient(#070b0e 60%, rgba(7,11,14,0)); }
+@media(max-width:1050px){ .mission-grid { grid-template-columns:1fr; } }
+@media(prefers-reduced-motion:reduce){ .scroll-cue i:after { animation:none; } }
 </style>
 
+<div class="progress" id="progress" aria-hidden="true"></div>
 <div class="wrap">
   <nav class="topbar" aria-label="Main navigation">
     <a class="brand" href="#mission"><span class="brand-mark" aria-hidden="true"></span>KESSLER</a>
-    <div class="nav-links scene-tabs" role="tablist"><a href="#overview" data-go="overview">Overview</a><a href="#mission" data-go="mission">Live mission</a><a href="#data" data-go="data">Flight data</a><a href="#results" data-go="results">Results</a><a href="#train" data-go="train">Train it</a></div>
+    <div class="nav-links scene-tabs" role="tablist"><a href="#overview" data-go="overview">Overview</a><a href="#mission" data-go="mission">Live mission</a><a href="#results" data-go="results">Results</a><a href="#train" data-go="train">Train it</a></div>
     <span class="demo-badge">Live simulation · runs in your browser</span>
   </nav>
   <main class="scenes">
@@ -362,6 +380,7 @@ button.linkish:hover { background:none; color:var(--fg); }
     <div><b>2</b><div><h4>AI decides to burn</h4><p>Early is cheap. Late is certain. It learned the balance.</p></div></div>
     <div><b>3</b><div><h4>Pass safely, return home</h4><p>Outside the 200 m bubble, back to its orbit.</p></div></div>
   </div>
+  <div class="scroll-cue" aria-hidden="true"><i></i>Scroll</div>
   </section>
 
   <section class="scene" data-scene="mission" data-name="Live mission">
@@ -386,6 +405,7 @@ button.linkish:hover { background:none; color:var(--fg); }
 
 
   <div class="grid mission-grid">
+    <div class="col">
     <section class="panel" id="globepanel">
       <div class="panel-head">
         <h3><span class="section-number">01</span>Orbital overview</h3>
@@ -394,7 +414,12 @@ button.linkish:hover { background:none; color:var(--fg); }
       <canvas id="globe" aria-label="Interactive 3D view of Earth, satellite and simulated debris"></canvas>
       <div class="globe-caption"><span class="orbit-badge">LEO / 550 km / 53°</span><p class="note">Drag to explore · 6,000 simulated debris objects</p></div>
     </section>
-
+      <section class="panel">
+      <div class="panel-head"><h3>Orbit deviation</h3><span class="note">Drift from the assigned slot · metres</span></div>
+      <canvas id="hill"></canvas>
+    </section>
+    </div>
+    <div class="col">
     <section class="panel encounter-panel" id="encounter">
       <div class="toast-wrap" id="toasts" aria-live="polite"></div>
       <div class="decision"><p class="eyebrow">Encounter assessment</p><h3 class="decision-title" id="decision-title">Monitoring your orbit</h3><p id="decision-copy">Tracking the next close approach.</p></div>
@@ -406,8 +431,12 @@ button.linkish:hover { background:none; color:var(--fg); }
       <canvas id="bplane" aria-label="Predicted satellite miss distance and uncertainty around the debris keep-out zone"></canvas>
       <div class="legend"><span><i style="background: var(--threat)"></i>200 m keep-out zone</span><span><i style="background: var(--amber)"></i>Predicted pass + uncertainty</span><span><i style="background: transparent; border: 1px solid var(--noop)"></i>Pass without avoidance</span></div>
       <p class="plain"><b>Goal:</b> keep the <b class="a">amber dot</b> out of the <b class="r">red bubble</b>.</p>
-
     </section>
+      <section class="panel">
+      <div class="panel-head"><h3>Encounter timeline</h3><span class="note">Approaches and burns over 4 h</span></div>
+      <canvas id="timeline"></canvas>
+    </section>
+    </div>
   </div>
 
       <div class="tiles">
@@ -418,21 +447,6 @@ button.linkish:hover { background:none; color:var(--fg); }
         <div class="tile"><div class="k">Safely passed</div><div class="v" id="t-ok" style="color: var(--safe)">0</div></div>
         <div class="tile"><div class="k">Unsafe passes</div><div class="v" id="t-bad" style="color: var(--threat)">0</div></div>
       </div>
-  </section>
-
-  <section class="scene" data-scene="data" data-name="Flight data">
-  <div class="scene-head"><h2 class="scene-title">Flight data</h2><p class="scene-sub">Where the satellite drifted, and when it burned.</p></div>
-  <div class="grid">
-    <section class="panel">
-      <div class="panel-head"><h3>Orbit deviation</h3><span class="note">Position relative to your assigned orbit · metres</span></div>
-      <canvas id="hill"></canvas>
-    </section>
-    <section class="panel">
-      <div class="panel-head"><h3>Encounter timeline</h3><span class="note">Tracking windows, closest approaches and burns</span></div>
-      <canvas id="timeline"></canvas>
-    </section>
-  </div>
-
   </section>
 
   <section class="scene" data-scene="results" data-name="Results">
@@ -949,7 +963,7 @@ const PRETRAINED = /*__WEIGHTS__*/;
     const tx = noop.violRate / Math.max(rl.violRate, 1e-6);
     Object.assign($('tk-x').dataset, { count: tx.toFixed(1), dec: '1', suf: '×' }); $('tk-x').textContent = tx.toFixed(1) + '×';
     Object.assign($('tk-slot').dataset, { count: (rl.slot * 1000).toFixed(0), suf: ' m' }); $('tk-slot').textContent = (rl.slot * 1000).toFixed(0) + ' m';
-    if (scene === 'results') { countUp($('tk-x')); countUp($('tk-slot')); }
+    if (io) { io.observe($('tk-x')); io.observe($('tk-slot')); }
     $('tk-slot-rule').textContent = (rule.slot * 1000).toFixed(0) + ' m';
     $('benchnote').textContent = '900 episodes simulated in ' + ((performance.now() - t0) / 1000).toFixed(1) + ' s';
     drawCurve();
@@ -1019,59 +1033,46 @@ const PRETRAINED = /*__WEIGHTS__*/;
   });
   $('stoptrain').addEventListener('click', () => { training = false; $('train').disabled = false; $('stoptrain').disabled = true; $('train').textContent = 'Resume training'; });
 
-  // ---------- Scenes: one focus at a time ----------
+  // ---------- Sections: one long scroll ----------
   const SCENES = [...document.querySelectorAll('.scene')];
-  let scene = null;
-  let showScene = function (name, opts) {
-    const el = SCENES.find((x) => x.dataset.scene === name) || SCENES[0];
-    if (scene === el.dataset.scene) return;
-    scene = el.dataset.scene;
-    SCENES.forEach((x) => x.classList.toggle('on', x === el));
-    document.querySelectorAll('.scene-tabs a').forEach((a) => a.classList.toggle('on', a.dataset.go === scene));
-    if (!(opts && opts.keepScroll)) window.scrollTo(0, 0);
-    if (!(opts && opts.noHash)) history.replaceState(null, '', '#' + scene);
-    if (scene === 'train' || scene === 'results') requestAnimationFrame(drawCurve);
-  };
-  SCENES.forEach((el, i) => {
-    const prev = SCENES[i - 1], next = SCENES[i + 1];
-    const nav = document.createElement('div'); nav.className = 'scene-nav';
-    nav.innerHTML = (prev ? '<button data-go="' + prev.dataset.scene + '">← ' + prev.dataset.name + '</button>' : '<span></span>') +
-      '<div class="dots">' + SCENES.map((x) => '<i data-go="' + x.dataset.scene + '" class="' + (x === el ? 'on' : '') + '" title="' + x.dataset.name + '"></i>').join('') + '</div>' +
-      (next ? '<button class="primary" data-go="' + next.dataset.scene + '">Next: ' + next.dataset.name + ' →</button>' : '<span></span>');
-    el.append(nav);
-  });
+  let scene = 'overview';
+  function showScene(name) {
+    const el = SCENES.find((x) => x.dataset.scene === name);
+    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
   document.addEventListener('click', (e) => { const g = e.target.closest('[data-go]'); if (g) { e.preventDefault(); showScene(g.dataset.go); } });
-  document.addEventListener('keydown', (e) => {
-    if (tourIdx >= 0 || /INPUT|TEXTAREA/.test(document.activeElement.tagName)) return;
-    const i = SCENES.findIndex((x) => x.dataset.scene === scene);
-    if (e.key === 'ArrowRight' && SCENES[i + 1]) showScene(SCENES[i + 1].dataset.scene);
-    if (e.key === 'ArrowLeft' && SCENES[i - 1]) showScene(SCENES[i - 1].dataset.scene);
-  });
+  function markTab(name) { scene = name; document.querySelectorAll('.scene-tabs a').forEach((a) => a.classList.toggle('on', a.dataset.go === name)); }
+  if ('IntersectionObserver' in window) {
+    const spy = new IntersectionObserver((ents) => ents.forEach((e) => { if (e.isIntersecting) markTab(e.target.dataset.scene); }), { rootMargin: '-45% 0px -50% 0px' });
+    SCENES.forEach((el) => spy.observe(el));
+  }
+  const bar = $('progress');
+  const onScroll = () => { const h = document.documentElement.scrollHeight - innerHeight; bar.style.transform = 'scaleX(' + (h > 0 ? scrollY / h : 0) + ')'; };
+  addEventListener('scroll', onScroll, { passive: true }); addEventListener('resize', onScroll);
 
   // ---------- Scroll reveal + count-up ----------
-  const REVEAL = '.hero > div, .steps3 > div, .scene-head, .controller-panel, .mission-grid > .panel, .tiles, .grid > .panel, .section-label, .takeaway > div, .scorecard, .fulltable, .research-body > .panel, .scene-nav';
+  // Each block rises in as it reaches the viewport; siblings in the same row follow one after another.
+  const REVEAL = '.hero > div, .steps3 > div, .scroll-cue, .scene-head, .controller-panel, .col > .panel, .tiles, .section-label, .takeaway > div, .scorecard, .fulltable, .research-body > .panel';
   const io = 'IntersectionObserver' in window ? new IntersectionObserver((ents) => ents.forEach((e) => {
     if (!e.isIntersecting) return;
     e.target.classList.add('in'); io.unobserve(e.target);
     if (e.target.dataset.count) countUp(e.target);
-  }), { threshold: 0.12, rootMargin: '0px 0px -6% 0px' }) : null;
-  function armReveals(sceneEl) {
+  }), { threshold: 0.15, rootMargin: '0px 0px -8% 0px' }) : null;
+  function armReveals() {
     if (!io) return;
-    sceneEl.querySelectorAll(REVEAL).forEach((el, i) => {
-      el.classList.add('reveal'); el.classList.remove('in');
-      el.style.setProperty('--d', Math.min(i, 6) * 90 + 'ms');
-      io.unobserve(el); io.observe(el);
+    document.querySelectorAll(REVEAL).forEach((el) => {
+      const sib = [...el.parentElement.children].filter((c) => c.matches(REVEAL));
+      el.classList.add('reveal');
+      el.style.setProperty('--d', Math.min(sib.indexOf(el), 5) * 140 + 'ms');
+      io.observe(el);
     });
-    sceneEl.querySelectorAll('.steps3').forEach((el) => { el.classList.remove('in'); setTimeout(() => el.classList.add('in'), 250); });
-    sceneEl.querySelectorAll('[data-count]').forEach((el) => { io.unobserve(el); io.observe(el); });
+    document.querySelectorAll('.steps3').forEach((el) => setTimeout(() => el.classList.add('in'), 400));
   }
   function countUp(el) {
     const to = +el.dataset.count, dec = +(el.dataset.dec || 0), suf = el.dataset.suf || '', t0 = performance.now(), dur = 1100;
     const tick = (now) => { const k = Math.min(1, (now - t0) / dur), e = 1 - Math.pow(1 - k, 3); el.textContent = (to * e).toFixed(dec) + suf; if (k < 1) requestAnimationFrame(tick); };
     requestAnimationFrame(tick);
   }
-  const _show = showScene;
-  showScene = function (name, opts) { const prev = scene; _show(name, opts); if (scene !== prev) armReveals(SCENES.find((x) => x.dataset.scene === scene)); };
 
   // ---------- Guided demo ----------
   // A scripted walkthrough for judges. It flies one showcase scenario (#3700, picked because it shows all three
@@ -1127,7 +1128,7 @@ const PRETRAINED = /*__WEIGHTS__*/;
     if ($('tour-back')) $('tour-back').onclick = () => tourGo(tourIdx - 1);
     $('tour-skip').onclick = tourEnd;
     if (s.enter) s.enter();
-    if (s.target) { showScene($(s.target).closest('.scene').dataset.scene, { noHash: true }); requestAnimationFrame(() => $(s.target).scrollIntoView({ behavior: 'smooth', block: 'center' })); spot.style.display = ''; }
+    if (s.target) { $(s.target).scrollIntoView({ behavior: 'smooth', block: 'center' }); spot.style.display = ''; }
     else spot.style.cssText = 'display:block;left:50%;top:50%;width:0;height:0;position:fixed';
     $('tour-next').focus({ preventScroll: true });
   }
@@ -1161,7 +1162,8 @@ const PRETRAINED = /*__WEIGHTS__*/;
   drawCurve();
   runBench();
   requestAnimationFrame(frame);
-  showScene((location.hash || '').slice(1) || 'overview', { noHash: true, keepScroll: true });
+  armReveals(); onScroll();
+  if (location.hash && location.hash !== '#tour') setTimeout(() => showScene(location.hash.slice(1)), 300);
   if (/[?&]tour\b/.test(location.search) || location.hash === '#tour') setTimeout(() => tourGo(0), 600);
 })();
 </script>
