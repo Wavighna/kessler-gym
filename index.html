@@ -355,6 +355,21 @@ button.linkish:hover { background:none; color:var(--fg); }
 .topbar { position:sticky; top:0; z-index:30; background:linear-gradient(#070b0e 60%, rgba(7,11,14,0)); }
 @media(max-width:1050px){ .mission-grid { grid-template-columns:1fr; } }
 @media(prefers-reduced-motion:reduce){ .scroll-cue i:after { animation:none; } }
+
+/* Stacked cards: each section pins in place and the next one slides up over it. */
+.scenes { gap:0; padding-bottom:6vh; }
+.scene { position:sticky; top:var(--top,88px); z-index:var(--z,1); margin-bottom:38vh; padding:44px 40px 40px; border-radius:40px;
+  background:radial-gradient(120% 80% at 15% 0%, #12242a 0%, transparent 55%), radial-gradient(100% 70% at 100% 100%, #141c38 0%, transparent 60%), #0a1013;
+  box-shadow:0 -30px 70px -24px rgba(0,0,0,.85), inset 0 1px 0 rgba(255,255,255,.07); transform-origin:50% 0; will-change:transform; }
+.scene:last-child { margin-bottom:0; }
+.scene { min-height:calc(100vh - 104px); }
+.scene[data-scene="results"] { justify-content:center; }
+.scene[data-scene="overview"] { min-height:calc(100vh - 120px); }
+.scene .panel { background:rgba(255,255,255,.028); }
+.scene-shade { position:absolute; inset:0; border-radius:inherit; background:#05080a; opacity:0; pointer-events:none; z-index:20; }
+.stack-mark { height:0; }
+@media(max-width:760px){ .scene { padding:28px 18px; border-radius:28px; margin-bottom:24vh; } }
+@media(prefers-reduced-motion:reduce){ .scene { position:relative; top:auto; margin-bottom:10vh; } }
 </style>
 
 <div class="progress" id="progress" aria-hidden="true"></div>
@@ -1418,22 +1433,59 @@ const PRETRAINED = {"theta":[-0.6583,-0.24839,-0.57415,0.1816,-0.21995,0.31525,-
   });
   $('stoptrain').addEventListener('click', () => { training = false; $('train').disabled = false; $('stoptrain').disabled = true; $('train').textContent = 'Resume training'; });
 
-  // ---------- Sections: one long scroll ----------
+  // ---------- Stacked cards: content comes up to you ----------
+  // Every section is a sticky card. A zero-height marker before each one records where it sits in the flow,
+  // so nav, scroll-spy and the tour can target it even while it is pinned.
   const SCENES = [...document.querySelectorAll('.scene')];
-  let scene = 'overview';
+  const MARKS = SCENES.map((el, i) => {
+    const m = document.createElement('div'); m.className = 'stack-mark'; el.before(m);
+    const sh = document.createElement('div'); sh.className = 'scene-shade'; el.append(sh);
+    el.style.setProperty('--z', i + 1);
+    return m;
+  });
+  const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  let scene = 'overview', NAV = 88;
+  function layoutStack() {
+    NAV = Math.round(document.querySelector('.topbar').getBoundingClientRect().height) + 8;
+    // tall cards scroll until their bottom is on screen, then pin there
+    SCENES.forEach((el) => el.style.setProperty('--top', Math.min(NAV, innerHeight - el.offsetHeight - 16) + 'px'));
+  }
+  const pageY = (el) => el.getBoundingClientRect().top + scrollY;
   function showScene(name) {
-    const el = SCENES.find((x) => x.dataset.scene === name);
-    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    const i = SCENES.findIndex((x) => x.dataset.scene === name);
+    if (i >= 0) scrollTo({ top: Math.max(0, pageY(MARKS[i]) - NAV), behavior: 'smooth' });
+  }
+  // Scroll to a block inside a card, centred, accounting for the card being pinned.
+  function scrollToBlock(el) {
+    const sc = el.closest('.scene'), i = SCENES.indexOf(sc);
+    const within = el.getBoundingClientRect().top - sc.getBoundingClientRect().top;
+    const natural = pageY(MARKS[i]) + within;
+    const y = natural - Math.max(NAV, (innerHeight - el.offsetHeight) / 2);
+    scrollTo({ top: Math.max(pageY(MARKS[i]) - NAV, y), behavior: 'smooth' });
   }
   document.addEventListener('click', (e) => { const g = e.target.closest('[data-go]'); if (g) { e.preventDefault(); showScene(g.dataset.go); } });
-  function markTab(name) { scene = name; document.querySelectorAll('.scene-tabs a').forEach((a) => a.classList.toggle('on', a.dataset.go === name)); }
-  if ('IntersectionObserver' in window) {
-    const spy = new IntersectionObserver((ents) => ents.forEach((e) => { if (e.isIntersecting) markTab(e.target.dataset.scene); }), { rootMargin: '-45% 0px -50% 0px' });
-    SCENES.forEach((el) => spy.observe(el));
-  }
   const bar = $('progress');
-  const onScroll = () => { const h = document.documentElement.scrollHeight - innerHeight; bar.style.transform = 'scaleX(' + (h > 0 ? scrollY / h : 0) + ')'; };
-  addEventListener('scroll', onScroll, { passive: true }); addEventListener('resize', onScroll);
+  function onScroll() {
+    const h = document.documentElement.scrollHeight - innerHeight;
+    bar.style.transform = 'scaleX(' + (h > 0 ? scrollY / h : 0) + ')';
+    let cur = 0;
+    SCENES.forEach((el, i) => {
+      const nextTop = MARKS[i + 1] ? MARKS[i + 1].getBoundingClientRect().top : Infinity;
+      if (MARKS[i].getBoundingClientRect().top < innerHeight * 0.5) cur = i;
+      if (reduceMotion) return;
+      // p: 0 when the next card enters at the bottom, 1 when it reaches the top
+      const p = Math.max(0, Math.min(1, (innerHeight - nextTop) / (innerHeight - NAV)));
+      el.style.transform = p ? 'scale(' + (1 - 0.07 * p) + ') translateY(' + (-12 * p) + 'px)' : '';
+      el.lastElementChild.style.opacity = (0.65 * p).toFixed(3);
+    });
+    const name = SCENES[cur].dataset.scene;
+    if (name !== scene) { scene = name; }
+    document.querySelectorAll('.scene-tabs a').forEach((a) => a.classList.toggle('on', a.dataset.go === scene));
+  }
+  addEventListener('scroll', onScroll, { passive: true });
+  addEventListener('resize', () => { layoutStack(); onScroll(); });
+  if ('ResizeObserver' in window) { const ro = new ResizeObserver(() => { layoutStack(); onScroll(); }); SCENES.forEach((el) => ro.observe(el)); }
+  layoutStack();
 
   // ---------- Scroll reveal + count-up ----------
   // Each block rises in as it reaches the viewport; siblings in the same row follow one after another.
@@ -1513,7 +1565,7 @@ const PRETRAINED = {"theta":[-0.6583,-0.24839,-0.57415,0.1816,-0.21995,0.31525,-
     if ($('tour-back')) $('tour-back').onclick = () => tourGo(tourIdx - 1);
     $('tour-skip').onclick = tourEnd;
     if (s.enter) s.enter();
-    if (s.target) { $(s.target).scrollIntoView({ behavior: 'smooth', block: 'center' }); spot.style.display = ''; }
+    if (s.target) { scrollToBlock($(s.target)); spot.style.display = ''; }
     else spot.style.cssText = 'display:block;left:50%;top:50%;width:0;height:0;position:fixed';
     $('tour-next').focus({ preventScroll: true });
   }
