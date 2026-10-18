@@ -1,4 +1,4 @@
-# Kessler-Gym
+# Kessler
 
 **An AI that teaches satellites to dodge space junk.** A reinforcement-learning environment and live mission dashboard for satellite collision avoidance in low Earth orbit.
 
