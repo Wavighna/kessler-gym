@@ -1,0 +1,67 @@
+no-op      return   -69.99  violations  43.8%  dv 0.000 m/s  slot 0.482 km
+rule       return   -33.56  violations   1.7%  dv 2.960 m/s  slot 0.501 km
+gen 25  pop-mean -58.06  4s
+  ES       return   -38.07  violations  18.5%  dv 3.615 m/s  slot 0.424 km
+gen 50  pop-mean -61.25  11s
+  ES       return   -28.72  violations  12.9%  dv 3.724 m/s  slot 0.293 km
+gen 75  pop-mean -56.44  19s
+  ES       return   -23.85  violations   7.2%  dv 3.910 m/s  slot 0.398 km
+gen 100  pop-mean -42.80  26s
+  ES       return   -23.24  violations   9.0%  dv 3.617 m/s  slot 0.227 km
+gen 125  pop-mean -41.94  35s
+  ES       return   -23.85  violations   9.6%  dv 3.792 m/s  slot 0.211 km
+gen 150  pop-mean -46.91  47s
+  ES       return   -22.26  violations   7.8%  dv 3.744 m/s  slot 0.277 km
+gen 175  pop-mean -37.38  56s
+  ES       return   -22.86  violations   8.0%  dv 3.846 m/s  slot 0.312 km
+gen 200  pop-mean -39.23  69s
+  ES       return   -19.60  violations   6.2%  dv 3.780 m/s  slot 0.281 km
+gen 225  pop-mean -49.16  80s
+  ES       return   -25.52  violations  10.2%  dv 3.515 m/s  slot 0.342 km
+gen 250  pop-mean -58.81  93s
+  ES       return   -21.01  violations   6.8%  dv 3.743 m/s  slot 0.294 km
+gen 275  pop-mean -33.13  103s
+  ES       return   -24.33  violations   9.6%  dv 3.817 m/s  slot 0.238 km
+gen 300  pop-mean -81.61  113s
+  ES       return   -25.15  violations   7.0%  dv 3.923 m/s  slot 0.362 km
+gen 325  pop-mean -57.80  126s
+  ES       return   -33.60  violations  13.7%  dv 3.758 m/s  slot 0.335 km
+gen 350  pop-mean -25.61  140s
+  ES       return   -23.31  violations   8.6%  dv 3.691 m/s  slot 0.262 km
+gen 375  pop-mean -26.56  154s
+  ES       return   -22.33  violations   8.0%  dv 3.943 m/s  slot 0.247 km
+gen 400  pop-mean -74.04  168s
+  ES       return   -29.14  violations  11.0%  dv 3.892 m/s  slot 0.304 km
+gen 425  pop-mean -39.21  180s
+  ES       return   -27.26  violations  10.4%  dv 3.663 m/s  slot 0.321 km
+gen 450  pop-mean -58.67  192s
+  ES       return   -32.95  violations  13.1%  dv 3.867 m/s  slot 0.329 km
+gen 475  pop-mean -42.34  203s
+  ES       return   -26.67  violations  10.8%  dv 3.572 m/s  slot 0.246 km
+gen 500  pop-mean -78.30  210s
+  ES       return   -32.19  violations  14.1%  dv 3.624 m/s  slot 0.288 km
+gen 525  pop-mean -59.28  217s
+  ES       return   -25.64  violations  10.2%  dv 3.902 m/s  slot 0.242 km
+gen 550  pop-mean -43.29  227s
+  ES       return   -28.75  violations  10.2%  dv 3.920 m/s  slot 0.323 km
+gen 575  pop-mean -60.08  236s
+  ES       return   -39.87  violations  16.1%  dv 3.763 m/s  slot 0.394 km
+gen 600  pop-mean -75.78  242s
+  ES       return   -35.02  violations  13.7%  dv 4.000 m/s  slot 0.373 km
+gen 625  pop-mean -63.58  252s
+  ES       return   -37.78  violations  13.9%  dv 4.000 m/s  slot 0.479 km
+gen 650  pop-mean -37.80  260s
+  ES       return   -31.98  violations  13.3%  dv 3.997 m/s  slot 0.322 km
+gen 675  pop-mean -63.42  270s
+  ES       return   -31.19  violations  13.3%  dv 3.906 m/s  slot 0.306 km
+gen 700  pop-mean -101.49  279s
+  ES       return   -40.62  violations  13.1%  dv 3.999 m/s  slot 0.456 km
+gen 725  pop-mean -64.98  288s
+  ES       return   -31.87  violations  10.0%  dv 3.997 m/s  slot 0.361 km
+gen 750  pop-mean -40.58  298s
+  ES       return   -25.50  violations   8.0%  dv 3.972 m/s  slot 0.329 km
+gen 775  pop-mean -49.11  307s
+  ES       return   -37.14  violations  16.3%  dv 3.834 m/s  slot 0.424 km
+gen 800  pop-mean -87.97  320s
+  ES       return   -42.40  violations  15.1%  dv 3.989 m/s  slot 0.473 km
+ES best    return   -19.96  violations   5.9%  dv 3.817 m/s  slot 0.296 km
