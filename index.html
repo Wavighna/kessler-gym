@@ -184,22 +184,93 @@ th { font-size:9px; }
 @media(max-width:480px) { .wrap { padding-inline:16px; gap:18px; } .topbar { padding:20px 0; } .brand { font-size:18px; } .demo-badge { font-size:9px; } .panel { padding:16px; } .controls { gap:10px; } .controller-label { width:100%; } .seg { width:100%; } .seg button { flex:1; padding-inline:8px; font-size:11px; } .tile { padding-inline:12px; } .tile .v { font-size:15px; } .tile .k { font-size:8px; } .globe-caption { align-items:flex-start; flex-direction:column; gap:8px; } h1 { font-size:30px; } .research-body { padding:0 12px 12px; } .research .explain { grid-template-columns:1fr; } }
 @media(prefers-reduced-motion:reduce) { html { scroll-behavior:auto; } }
 
+/* Judge-facing layer: plain-English hero, three-step explainer, outcome toasts, scorecard, guided tour. */
+.hero { display:grid; grid-template-columns:minmax(0,1.4fr) minmax(0,1fr); gap:32px; align-items:end; padding-top:28px; }
+.hero h1 { font-size:clamp(32px,4vw,54px); letter-spacing:-.05em; font-weight:600; line-height:1.05; margin:0; }
+.hero h1 em { font-style:normal; color:var(--amber); }
+.hero .sub { font-size:16px; color:#b9c8d1; max-width:60ch; }
+.hero-cta { display:flex; flex-direction:column; gap:12px; align-items:flex-start; }
+.hero-cta .status { max-width:none; }
+button.big { font-size:16px; font-weight:600; padding:16px 26px; border-radius:10px; min-height:56px; display:inline-flex; align-items:center; gap:12px; box-shadow:0 0 0 0 rgba(141,224,188,.5); animation:pulse 2.4s infinite; }
+button.big .play { width:0; height:0; border-left:12px solid currentColor; border-top:8px solid transparent; border-bottom:8px solid transparent; }
+@keyframes pulse { 0%{box-shadow:0 0 0 0 rgba(141,224,188,.45)} 70%{box-shadow:0 0 0 16px rgba(141,224,188,0)} 100%{box-shadow:0 0 0 0 rgba(141,224,188,0)} }
+.hero-hint { color:var(--muted); font-size:12px; }
+.steps3 { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:0; border:1px solid var(--line); border-radius:12px; background:var(--panel); overflow:hidden; }
+.steps3 > div { padding:18px 22px; border-right:1px solid var(--line); display:flex; gap:14px; align-items:flex-start; }
+.steps3 > div:last-child { border-right:0; }
+.steps3 b { flex:none; width:30px; height:30px; border-radius:50%; display:grid; place-items:center; font:600 13px var(--f-mono); background:#1d2c33; color:var(--amber); border:1px solid #3a4c55; }
+.steps3 h4 { margin:2px 0 4px; font-size:15px; font-weight:600; }
+.steps3 p { margin:0; color:var(--muted); font-size:12.5px; line-height:1.6; }
+.encounter-panel { position:relative; }
+.toast-wrap { position:absolute; left:16px; right:16px; top:16px; display:flex; flex-direction:column; gap:8px; pointer-events:none; z-index:5; }
+.toast { padding:14px 16px; border-radius:10px; font-weight:600; font-size:15px; display:flex; gap:12px; align-items:center; animation:toastIn .35s ease-out; box-shadow:0 10px 30px rgba(0,0,0,.45); }
+.toast small { display:block; font-weight:400; font-size:12px; opacity:.85; margin-top:2px; }
+.toast .ic { font-size:22px; line-height:1; }
+.toast.ok { background:#123527; color:#bff3da; border:1px solid #2f7a5a; }
+.toast.bad { background:#3a1418; color:#ffd0d0; border:1px solid #8a2c33; }
+.toast.out { animation:toastOut .4s ease-in forwards; }
+@keyframes toastIn { from{opacity:0; transform:translateY(-8px) scale(.98)} to{opacity:1; transform:none} }
+@keyframes toastOut { to{opacity:0; transform:translateY(-6px)} }
+.plain { color:#c5d3db; font-size:12.5px; line-height:1.65; margin:0; }
+.plain b { color:var(--fg); font-weight:600; }
+.plain .r { color:var(--threat); } .plain .a { color:var(--amber); }
+.scorecard table td,.scorecard table th { padding:10px; }
+.scorecard .verdict { font-weight:600; }
+.scorecard .empty { color:var(--muted); font-size:12.5px; }
+.pill { display:inline-block; padding:2px 9px; border-radius:20px; font:500 11px var(--f-mono); }
+.pill.ok { background:#123527; color:var(--safe); } .pill.bad { background:#3a1418; color:#ff9a9a; } .pill.warn { background:#3a2e14; color:var(--amber); }
+.takeaway { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:12px; }
+.takeaway div { background:var(--panel-2); border:1px solid var(--line); border-radius:10px; padding:14px 16px; }
+.takeaway strong { display:block; font:600 26px var(--f-mono); letter-spacing:-.04em; color:var(--rl); }
+.takeaway span { color:var(--muted); font-size:12px; line-height:1.5; display:block; margin-top:4px; }
+/* tour */
+.tour-dim { position:fixed; inset:0; z-index:40; pointer-events:none; }
+.tour-spot { position:absolute; z-index:41; border-radius:14px; box-shadow:0 0 0 9999px rgba(3,6,9,.72); outline:2px solid var(--amber); outline-offset:4px; pointer-events:none; transition:all .45s cubic-bezier(.2,.8,.2,1); }
+.tour-card { position:fixed; z-index:50; right:24px; bottom:24px; width:min(420px,calc(100vw - 32px)); background:#0f171c; border:1px solid #3a4c55; border-radius:14px; padding:20px 22px 18px; box-shadow:0 24px 60px rgba(0,0,0,.6); }
+.tour-card.center { right:50%; bottom:50%; transform:translate(50%,50%); width:min(560px,calc(100vw - 32px)); padding:30px 32px 24px; }
+.tour-step { font:500 10px var(--f-mono); letter-spacing:.16em; color:var(--amber); text-transform:uppercase; }
+.tour-card h3 { font-size:22px; font-weight:600; letter-spacing:-.03em; margin:8px 0 10px; }
+.tour-card.center h3 { font-size:30px; }
+.tour-card p { color:#c5d3db; font-size:14px; line-height:1.65; margin:0 0 10px; }
+.tour-card p b { color:var(--fg); }
+.tour-live { font:500 13px var(--f-mono); padding:10px 12px; border-radius:8px; background:var(--panel-2); border:1px solid var(--line); margin:4px 0 12px; color:var(--muted); }
+.tour-live.ok { color:var(--safe); border-color:#2f7a5a; } .tour-live.bad { color:#ff9a9a; border-color:#8a2c33; }
+.tour-nav { display:flex; justify-content:space-between; align-items:center; gap:10px; margin-top:6px; }
+.tour-dots { display:flex; gap:5px; }
+.tour-dots i { width:6px; height:6px; border-radius:50%; background:#33434c; }
+.tour-dots i.on { background:var(--amber); width:16px; border-radius:3px; }
+.tour-skip { background:none; border:0; color:var(--muted); padding:6px 4px; min-height:0; }
+.tour-skip:hover { background:none; color:var(--fg); }
+@media(max-width:900px){ .hero { grid-template-columns:1fr; } .steps3,.takeaway { grid-template-columns:1fr; } .steps3 > div { border-right:0; border-bottom:1px solid var(--line); } }
+@media(max-width:600px){ .tour-card { right:16px; left:16px; bottom:16px; width:auto; } .tour-card.center { left:16px; right:16px; bottom:50%; transform:translateY(50%); width:auto; } }
+
 </style>
 
 <div class="wrap">
   <nav class="topbar" aria-label="Main navigation">
     <a class="brand" href="#mission"><span class="brand-mark" aria-hidden="true"></span>KESSLER</a>
-    <div class="nav-links"><a href="#mission">Mission overview</a><a href="#compare">Policy comparison</a><a href="#research">Research lab</a></div>
-    <span class="demo-badge">Interactive simulation</span>
+    <div class="nav-links"><a href="#" data-tour>Guided demo</a><a href="#mission">Live mission</a><a href="#compare">Results</a><a href="#research">Train it yourself</a></div>
+    <span class="demo-badge">Live simulation · runs in your browser</span>
   </nav>
-  <header id="mission">
-    <div><p class="eyebrow">Orbital intelligence / Mission control</p><h1>A clearer path through orbit.</h1><p class="sub">Track close approaches. Explore avoidance maneuvers. See how each decision affects your satellite's safety, fuel and orbit.</p></div>
-    <div class="status" id="status" role="status">Initializing simulation…</div>
+  <header class="hero">
+    <div><p class="eyebrow">Autonomous collision avoidance for satellites</p><h1>An AI that teaches satellites to <em>dodge space junk.</em></h1><p class="sub">Low Earth orbit has 10,000+ active satellites and tens of thousands of tracked debris pieces. One collision at 10 km/s creates thousands more: <b>Kessler syndrome</b>. Kessler is a physics simulator plus a reinforcement-learning pilot that decides <b>when</b> to fire thrusters, <b>which way</b>, and <b>how to get back</b> into its orbit, using as little fuel as possible.</p></div>
+    <div class="hero-cta">
+      <button class="primary big" data-tour><span class="play" aria-hidden="true"></span>Watch the 60-second guided demo</button>
+      <span class="hero-hint">or scroll down and fly it yourself: pick a pilot and press Replay</span>
+      <div class="status" id="status" role="status">Initializing simulation…</div>
+    </div>
   </header>
 
-  <section class="panel controller-panel" aria-label="Simulation controls">
+  <div class="steps3" aria-label="How it works">
+    <div><b>1</b><div><h4>Debris is detected</h4><p>Radar spots an object on a near-collision course 15–60 min out. Its predicted path starts fuzzy and sharpens over time.</p></div></div>
+    <div><b>2</b><div><h4>The AI decides to burn</h4><p>Burn early and it's cheap but based on a guess. Burn late and you know more, but it costs far more fuel. The AI learned this trade-off.</p></div></div>
+    <div><b>3</b><div><h4>Pass safely, return home</h4><p>The satellite passes outside the 200 m safety bubble, then steers back into its assigned slot with fuel to spare.</p></div></div>
+  </div>
+  <span id="mission"></span>
+
+  <section class="panel controller-panel" id="controlpanel" aria-label="Simulation controls">
     <div class="controls">
-      <h2 class="controller-label">Flight controller</h2>
+      <h2 class="controller-label">Choose a pilot</h2>
       <div class="seg" role="group" aria-label="Policy">
         <button id="p-rl" data-p="rl" style="--sel: var(--rl)">AI policy</button>
         <button id="p-live" data-p="live" style="--sel: var(--rl)" disabled>Your trained policy</button>
@@ -224,7 +295,7 @@ th { font-size:9px; }
       </div>
 
   <div class="grid mission-grid">
-    <section class="panel">
+    <section class="panel" id="globepanel">
       <div class="panel-head">
         <h3><span class="section-number">01</span>Orbital overview</h3>
         <div class="legend"><span><i style="background: var(--amber)"></i>Our satellite, 550 km / 53°</span><span><i style="background: #5d6f93"></i>Tracked objects (simulated shells)</span><span><i style="background: var(--threat)"></i>Active conjunction</span></div>
@@ -233,7 +304,8 @@ th { font-size:9px; }
       <div class="globe-caption"><span class="orbit-badge">LEO / 550 km / 53°</span><p class="note">Drag to explore · 6,000 simulated debris objects</p></div>
     </section>
 
-    <section class="panel encounter-panel">
+    <section class="panel encounter-panel" id="encounter">
+      <div class="toast-wrap" id="toasts" aria-live="polite"></div>
       <div class="decision"><p class="eyebrow">Encounter assessment</p><h3 class="decision-title" id="decision-title">Monitoring your orbit</h3><p id="decision-copy">Tracking the next close approach.</p></div>
       <div class="mission-facts"><div>Next closest approach<strong id="next-approach">—</strong></div><div>Fuel remaining<strong id="fuel-left">4.00 m/s</strong><div class="fuel-track"><span id="fuel-bar"></span></div></div></div>
       <div class="panel-head">
@@ -242,6 +314,7 @@ th { font-size:9px; }
       </div>
       <canvas id="bplane" aria-label="Predicted satellite miss distance and uncertainty around the debris keep-out zone"></canvas>
       <div class="legend"><span><i style="background: var(--threat)"></i>200 m keep-out zone</span><span><i style="background: var(--amber)"></i>Predicted pass + uncertainty</span><span><i style="background: transparent; border: 1px solid var(--noop)"></i>Pass without avoidance</span></div>
+      <p class="plain">You're looking down the debris's path. <b class="r">Red circle</b> = the debris plus a 200 m safety bubble. <b class="a">Amber dot</b> = where our satellite will pass; the dashed ring is the uncertainty, which shrinks as tracking improves. <b>Goal: keep amber outside red.</b></p>
 
     </section>
   </div>
@@ -257,9 +330,20 @@ th { font-size:9px; }
     </section>
   </div>
 
-  <div class="section-label" id="compare"><div><p class="eyebrow">Measure the trade-offs</p><h3>One mission. Three ways to fly.</h3><p class="note">Compare safety, fuel use and orbit keeping on the same 300 evaluation scenarios.</p></div></div>
+  <section class="panel scorecard" id="scorecard">
+    <div class="panel-head"><h3>Mission scorecard: this scenario</h3><span class="note" id="score-seed"></span></div>
+    <p class="plain">Every pilot you fly on the current scenario lands here, so you can compare them side by side. Switch pilots above and the same scenario replays.</p>
+    <div class="tablewrap"><table><thead><tr><th>Pilot</th><th>Unsafe passes</th><th>Fuel used (Δv)</th><th>Avg. orbit deviation</th><th>Verdict</th></tr></thead><tbody id="score-body"><tr><td colspan="5" class="empty">Fly a scenario to the end to see its result.</td></tr></tbody></table></div>
+  </section>
+
+  <div class="section-label" id="compare"><div><p class="eyebrow">The honest average</p><h3>300 scenarios the AI never trained on.</h3><p class="note">One scenario can be cherry-picked. These are averages over 300 held-out scenarios (about 1,040 close approaches), recomputed live in your browser on every page load.</p></div></div>
+  <div class="takeaway" id="takeaway">
+    <div><strong id="tk-ret">—</strong><span>Best overall score of the three pilots (combined safety + fuel + orbit-keeping reward)</span></div>
+    <div><strong id="tk-x">—</strong><span>fewer unsafe passes than doing nothing, learned purely from trial and error</span></div>
+    <div><strong id="tk-slot">—</strong><span>average distance from its assigned orbit, versus <span id="tk-slot-rule">—</span> for the human operator rule</span></div>
+  </div>
   <div class="grid evidence-grid">
-    <section class="panel">
+    <section class="panel" id="benchpanel">
       <div class="panel-head"><h3>Policy performance</h3><span class="note" id="benchnote">running in a Web Worker…</span></div>
       <div class="tablewrap">
         <table>
@@ -267,13 +351,13 @@ th { font-size:9px; }
           <tbody id="bench"></tbody>
         </table>
       </div>
-      <p class="note">Simulated encounters, not live tracking data. Lower violations, fuel use and orbit deviation are better; higher return is better. The AI optimizes the combined objective, so it does not necessarily win on safety alone.</p>
+      <p class="note">Simulated encounters, not live tracking data. Lower violations, fuel use and orbit deviation are better; higher return is better. <b style="color:var(--fg)">Honest caveat:</b> the hand-tuned operator rule still has fewer violations. The AI optimizes the combined objective, and closing that safety gap (residual RL on top of the rule, PPO, longer training) is our next step.</p>
     </section>
 
   </div>
 
   <details class="research" id="research"><summary>Research lab <span>Train your own policy and explore the physics</span></summary><div class="research-body">
-    <section class="panel">
+    <section class="panel" id="trainpanel">
       <div class="panel-head"><h3>Train your own controller</h3><span class="mono note" id="trainstat">idle</span></div>
       <div class="controls">
         <button class="primary" id="train">Start training</button>
@@ -734,7 +818,9 @@ const PRETRAINED = {"theta":[-0.6583,-0.24839,-0.57415,0.1816,-0.21995,0.31525,-
     env = new KG.Env();
     obs = env.reset(seed);
     traj = [env.p.slice()]; burns = []; trails = {}; finished = null;
+    if ($('toasts')) $('toasts').innerHTML = '';
     recordTrails();
+    if ($('score-body')) renderScore();
     $('seedv').textContent = 'scenario #' + seed + ' · ' + env.conj.length + ' conjunctions';
   }
   function recordTrails() {
@@ -754,7 +840,42 @@ const PRETRAINED = {"theta":[-0.6583,-0.24839,-0.57415,0.1816,-0.21995,0.31525,-
       k.qTrue = [KG.vec.dot(dd, k.e1), KG.vec.dot(dd, k.e2)];
     }
     recordTrails();
-    if (s.done) finished = performance.now();
+    for (const k of s.events) toast(k);
+    if (s.done) { finished = performance.now(); recordScore(); }
+  }
+
+  // ---------- Outcome toasts ----------
+  function toast(k) {
+    const el = document.createElement('div');
+    el.className = 'toast ' + (k.viol ? 'bad' : 'ok');
+    el.innerHTML = k.viol
+      ? '<span class="ic">✕</span><div>Unsafe pass: object ' + (k.id + 1) + ' missed by only ' + k.miss.toFixed(0) + ' m<small>Inside the 200 m safety bubble. In real life, a possible collision.</small></div>'
+      : '<span class="ic">✓</span><div>Cleared object ' + (k.id + 1) + ' by ' + k.miss.toFixed(0) + ' m<small>' + (polKey === 'noop' ? 'No burn: this one happened to miss on its own.' : POL[polKey].name + ' kept the satellite outside the 200 m bubble.') + '</small></div>';
+    const box = $('toasts');
+    box.prepend(el);
+    while (box.children.length > 2) box.lastChild.remove();
+    setTimeout(() => { el.classList.add('out'); setTimeout(() => el.remove(), 420); }, 3600);
+  }
+
+  // ---------- Per-scenario scorecard ----------
+  const scores = {};
+  function recordScore() {
+    const viol = env.conj.filter((k) => k.viol).length;
+    (scores[seed] = scores[seed] || {})[polKey] = { viol, n: env.conj.length, dv: env.dvUsed, slot: env.slotErr / C.T_MAX * 1000, fuelOut: env.fuel <= 0.01 };
+    renderScore();
+  }
+  function renderScore() {
+    const sc = scores[seed] || {};
+    $('score-seed').textContent = 'scenario #' + seed;
+    const keys = ['noop', 'rule', 'rl', 'live'].filter((k) => sc[k]);
+    if (!keys.length) { $('score-body').innerHTML = '<tr><td colspan="5" class="empty">Fly this scenario to the end to see its result.</td></tr>'; return; }
+    $('score-body').innerHTML = keys.map((k) => {
+      const r = sc[k];
+      const v = r.viol ? '<span class="pill bad">' + r.viol + ' unsafe</span>' : '<span class="pill ok">all ' + r.n + ' cleared</span>';
+      const fuel = r.fuelOut ? ' <span class="pill warn">tank empty</span>' : '';
+      const verdict = r.viol === 0 ? (r.fuelOut ? 'Safe, but out of fuel' : 'Safe') : r.viol >= r.n / 2 ? 'Would likely be hit' : 'At risk';
+      return '<tr><td><span class="dot" style="background:' + POL[k].color + '"></span>' + POL[k].name + '</td><td class="mono">' + v + '</td><td class="mono">' + r.dv.toFixed(2) + ' m/s' + fuel + '</td><td class="mono">' + r.slot.toFixed(0) + ' m</td><td class="verdict" style="color:' + (r.viol ? COL.threat : COL.safe) + '">' + verdict + '</td></tr>';
+    }).join('');
   }
 
   // ---------- Controls ----------
@@ -1046,7 +1167,7 @@ const PRETRAINED = {"theta":[-0.6583,-0.24839,-0.57415,0.1816,-0.21995,0.31525,-
     }
     const frac = running && !finished ? Math.min(1, acc) : 0;
     drawGlobe((env.t + frac) * DT);
-    drawBplane(); drawHill(); drawTimeline(); drawTiles();
+    drawBplane(); drawHill(); drawTimeline(); drawTiles(); tourTick();
     requestAnimationFrame(frame);
   }
 
@@ -1095,6 +1216,10 @@ const PRETRAINED = {"theta":[-0.6583,-0.24839,-0.57415,0.1816,-0.21995,0.31525,-
     ]);
     Object.assign(benchRows, { rl, rule, noop });
     renderBench();
+    $('tk-ret').textContent = rl.ret.toFixed(1) + ' vs ' + rule.ret.toFixed(1);
+    $('tk-x').textContent = (noop.violRate / Math.max(rl.violRate, 1e-6)).toFixed(1) + '×';
+    $('tk-slot').textContent = (rl.slot * 1000).toFixed(0) + ' m';
+    $('tk-slot-rule').textContent = (rule.slot * 1000).toFixed(0) + ' m';
     $('benchnote').textContent = '900 episodes simulated in ' + ((performance.now() - t0) / 1000).toFixed(1) + ' s';
     drawCurve();
   }
@@ -1106,14 +1231,17 @@ const PRETRAINED = {"theta":[-0.6583,-0.24839,-0.57415,0.1816,-0.21995,0.31525,-
     ctx.clearRect(0, 0, w, h);
     const L = 44, R = w - 10, T = 10, B = h - 22;
     const refs = [['rule', COL.rule], ['noop', COL.noop]].filter(([k]) => benchRows[k]);
-    const vals = curve.concat(refs.map(([k]) => benchRows[k].ret)).concat(evalPts.map((p) => p.ret));
-    let lo = vals.length ? Math.min(...vals) : -80, hi = vals.length ? Math.max(...vals) : 0;
-    lo = Math.floor((lo - 5) / 10) * 10; hi = Math.ceil((hi + 5) / 10) * 10;
+    // Axis range follows the baselines and held-out evals; early random-weight population means can be in the
+    // thousands, so they are clipped instead of stretching the axis (which used to stack hundreds of labels).
+    const anchor = refs.map(([k]) => benchRows[k].ret).concat(evalPts.map((p) => p.ret));
+    let lo = anchor.length ? Math.min(...anchor) : -80, hi = anchor.length ? Math.max(...anchor) : 0;
+    if (curve.length) hi = Math.max(hi, ...curve.slice(-50));
+    lo = Math.floor((lo - 15) / 10) * 10; hi = Math.ceil((hi + 5) / 10) * 10;
     const gens = Math.max(60, curve.length);
-    const X = (g) => L + (R - L) * g / gens, Y = (v) => B - (B - T) * (v - lo) / (hi - lo || 1);
+    const X = (g) => L + (R - L) * g / gens, Y = (v) => B - (B - T) * (Math.max(lo, Math.min(hi, v)) - lo) / (hi - lo || 1);
     ctx.font = MONO; ctx.fillStyle = COL.muted; ctx.strokeStyle = COL.line; ctx.lineWidth = 1;
-    const step = (hi - lo) > 60 ? 20 : 10;
-    for (let v = lo; v <= hi; v += step) { ctx.beginPath(); ctx.moveTo(L, Y(v)); ctx.lineTo(R, Y(v)); ctx.stroke(); ctx.fillText(String(v), 4, Y(v) + 4); }
+    const raw = (hi - lo) / 5, mag = Math.pow(10, Math.floor(Math.log10(raw))), step = [1, 2, 5, 10].map((m) => m * mag).find((s) => s >= raw);
+    for (let v = Math.ceil(lo / step) * step; v <= hi; v += step) { ctx.beginPath(); ctx.moveTo(L, Y(v)); ctx.lineTo(R, Y(v)); ctx.stroke(); ctx.fillText(String(v), 4, Y(v) + 4); }
     ctx.fillText('generation', R - 70, h - 6); ctx.fillText('0', L, h - 6); ctx.fillText(String(gens), R - 24, h - 6);
     refs.forEach(([k, c]) => { ctx.strokeStyle = c; ctx.setLineDash([5, 4]); ctx.beginPath(); ctx.moveTo(L, Y(benchRows[k].ret)); ctx.lineTo(R, Y(benchRows[k].ret)); ctx.stroke(); ctx.setLineDash([]); ctx.fillStyle = c; ctx.fillText(POL[k].name, L + 4, Y(benchRows[k].ret) - 4); });
     if (curve.length) {
@@ -1159,6 +1287,86 @@ const PRETRAINED = {"theta":[-0.6583,-0.24839,-0.57415,0.1816,-0.21995,0.31525,-
   });
   $('stoptrain').addEventListener('click', () => { training = false; $('train').disabled = false; $('stoptrain').disabled = true; $('train').textContent = 'Resume training'; });
 
+  // ---------- Guided demo ----------
+  // A scripted walkthrough for judges. It flies one showcase scenario (#3700, picked because it shows all three
+  // outcomes clearly) with each pilot, then hands over to the honest 300-scenario average.
+  const SHOWCASE = 3700;
+  function fly(k) {
+    seed = SHOWCASE; setPolicy(k);
+    running = true; $('play').textContent = 'Pause';
+    speedEl.value = 14; speedLabel();
+  }
+  function runLive(k) {
+    return () => {
+      if (polKey !== k || seed !== SHOWCASE) return null;
+      let ok = 0, bad = 0; env.conj.forEach((c) => { if (c.done) (c.viol ? bad++ : ok++); });
+      if (!finished) return ['Flying… ' + fmtClock(env.t * DT) + ' · ' + ok + ' cleared · ' + bad + ' unsafe', bad ? 'bad' : ''];
+      const r = scores[SHOWCASE][k];
+      return [(bad ? '✕ ' : '✓ ') + 'Result: ' + bad + ' of ' + env.conj.length + ' passes unsafe · fuel used ' + r.dv.toFixed(2) + ' of ' + C.FUEL.toFixed(1) + ' m/s', bad ? 'bad' : 'ok'];
+    };
+  }
+  const done = (k) => () => polKey === k && seed === SHOWCASE && !!finished;
+  const TOUR = [
+    { center: true, title: 'Space is getting crowded.', html: '<p>Over 10,000 active satellites and tens of thousands of tracked debris pieces share low Earth orbit. Operators already make <b>tens of thousands of avoidance maneuvers a year</b>, mostly with simple threshold rules and humans in the loop.</p><p>A single collision creates thousands of new fragments: <b>Kessler syndrome</b>. We built an AI pilot that learns to dodge. This 60-second tour shows it working.</p>', next: 'Start the tour' },
+    { target: 'globepanel', title: 'This is low Earth orbit.', html: '<p>Each blue dot is one of <b>6,000 simulated debris objects</b>, animated live on your GPU. The <b style="color:var(--amber)">amber dot</b> is our satellite at 550 km.</p><p>When something is on a near-collision course, a <b style="color:var(--threat)">red marker</b> shows where it is coming from.</p>', enter: () => fly('noop') },
+    { target: 'encounter', title: 'The close-approach radar.', html: '<p>This view looks straight down the debris\'s path. <b style="color:var(--threat)">Red circle</b> = the debris plus a <b>200 m safety bubble</b>. <b style="color:var(--amber)">Amber dot</b> = where we will pass. The dashed ring is how unsure we are, and it <b>shrinks as tracking improves</b>.</p><p>The pilot\'s whole job: <b>keep amber outside red</b>, using as little fuel as possible.</p>' },
+    { target: 'encounter', title: 'Test 1: do nothing.', html: '<p>We fly the same 4-hour scenario three times. First with the thrusters <b>off</b>. Watch the outcome banners pop up as each piece of debris passes.</p>', enter: () => fly('noop'), live: runLive('noop'), gate: done('noop'), wait: 'Flying… (≈15 s)' },
+    { target: 'encounter', title: 'Test 2: the human playbook.', html: '<p>This is how operators do it today: wait until a decision point, and <b>burn if collision probability exceeds 1 in 10,000</b>. Then fly back to the slot.</p><p>It reacts late, so every dodge is expensive. Watch the fuel.</p>', enter: () => fly('rule'), live: runLive('rule'), gate: done('rule'), wait: 'Flying… (≈15 s)' },
+    { target: 'encounter', title: 'Test 3: our AI pilot.', html: '<p>A small neural network (2,083 parameters) trained only by trial and error. Nobody told it the rules. It learned <b>when</b> to burn, <b>which direction</b>, and <b>how to get home</b>.</p>', enter: () => fly('rl'), live: runLive('rl'), gate: done('rl'), wait: 'Flying… (≈15 s)' },
+    { target: 'scorecard', title: 'Same scenario, three pilots.', html: '<p>Doing nothing gets hit. The human rule <b>runs its tank dry</b> and still has an unsafe pass. The AI <b>clears every object</b>, keeps fuel in reserve, and stays far closer to its orbit than the rule (≈290 m vs ≈1.6 km).</p><p>But one scenario can be cherry-picked…</p>' },
+    { target: 'compare', title: 'The honest average.', html: '<p>Across <b>300 scenarios the AI never saw</b> (about 1,040 close approaches, recomputed live as this page loaded), the AI gets the <b>best overall score</b> and <b>7× fewer unsafe passes than doing nothing</b>.</p><p>We\'re upfront: the hand-tuned rule still has fewer violations. Closing that gap is our next step.</p>', enter: () => { running = false; $('play').textContent = 'Play'; } },
+    { target: 'trainpanel', title: 'Watch it learn, live.', html: '<p>Training runs <b>right now in your browser</b> across parallel Web Workers. No server, no GPU cluster. Evolution Strategies from random weights. Watch the solid line climb past both dashed baselines, usually in under a minute.</p>', enter: () => { $('research').open = true; drawCurve(); if (!training) $('train').click(); } },
+    { center: true, title: 'That\'s Kessler.', html: '<p>Real orbital mechanics (Clohessy–Wiltshire dynamics, B-plane risk, Rice-distribution collision probability), a learned pilot, honest baselines, and live distributed training, all in one web page.</p><p>Try it yourself: pick a pilot, hit <b>New scenario</b>, or keep the training running.</p>', next: 'Explore on my own' },
+  ];
+  let tourIdx = -1, spot = null, card = null;
+  function tourEnd() {
+    tourIdx = -1; spot && spot.remove(); card && card.remove(); spot = card = null;
+    running = true; $('play').textContent = 'Pause';
+  }
+  function tourGo(i) {
+    if (i < 0) i = 0;
+    if (i >= TOUR.length) return tourEnd();
+    tourIdx = i; const s = TOUR[i];
+    if (!card) {
+      card = document.createElement('div'); card.className = 'tour-card'; card.setAttribute('role', 'dialog'); card.setAttribute('aria-label', 'Guided demo');
+      spot = document.createElement('div'); spot.className = 'tour-spot';
+      document.body.append(spot, card);
+    }
+    card.className = 'tour-card' + (s.center ? ' center' : '');
+    card.innerHTML = '<div class="tour-step">Guided demo · ' + (i + 1) + ' / ' + TOUR.length + '</div><h3>' + s.title + '</h3>' + s.html +
+      (s.live ? '<div class="tour-live" id="tour-live">' + (s.wait || '') + '</div>' : '') +
+      '<div class="tour-nav"><button class="tour-skip" id="tour-skip">' + (i === TOUR.length - 1 ? '' : 'Skip tour') + '</button><div class="tour-dots">' + TOUR.map((_, j) => '<i class="' + (j === i ? 'on' : '') + '"></i>').join('') + '</div>' +
+      '<div style="display:flex;gap:8px">' + (i > 0 ? '<button id="tour-back">Back</button>' : '') + '<button class="primary" id="tour-next">' + (s.next || 'Next') + '</button></div></div>';
+    $('tour-next').onclick = () => tourGo(tourIdx + 1);
+    if ($('tour-back')) $('tour-back').onclick = () => tourGo(tourIdx - 1);
+    $('tour-skip').onclick = tourEnd;
+    if (s.enter) s.enter();
+    if (s.target) { $(s.target).scrollIntoView({ behavior: 'smooth', block: 'center' }); spot.style.display = ''; }
+    else spot.style.cssText = 'display:block;left:50%;top:50%;width:0;height:0;position:fixed';
+    $('tour-next').focus({ preventScroll: true });
+  }
+  function tourTick() {
+    if (tourIdx < 0) return;
+    const s = TOUR[tourIdx];
+    if (s.target) {
+      const r = $(s.target).getBoundingClientRect();
+      spot.style.cssText = 'position:fixed;left:' + (r.left - 6) + 'px;top:' + (r.top - 6) + 'px;width:' + (r.width + 12) + 'px;height:' + (r.height + 12) + 'px';
+      // keep the card off the highlighted panel: dock it on the opposite side when there is room
+      const wide = innerWidth > 900, onRight = r.left + r.width / 2 > innerWidth / 2;
+      card.style.left = wide && onRight ? '24px' : ''; card.style.right = wide && onRight ? 'auto' : '';
+    }
+    if (s.live) { const v = s.live(); const el = $('tour-live'); if (v && el) { el.textContent = v[0]; el.className = 'tour-live ' + v[1]; } }
+    const nx = $('tour-next');
+    if (nx && s.gate) { const ok = s.gate(); nx.disabled = !ok; nx.textContent = ok ? (s.next || 'Next') : 'Watching…'; }
+  }
+  document.querySelectorAll('[data-tour]').forEach((b) => b.addEventListener('click', (e) => { e.preventDefault(); tourGo(0); }));
+  document.addEventListener('keydown', (e) => {
+    if (tourIdx < 0) return;
+    if (e.key === 'Escape') tourEnd();
+    else if (e.key === 'ArrowRight' && !$('tour-next').disabled) tourGo(tourIdx + 1);
+    else if (e.key === 'ArrowLeft' && tourIdx > 0) tourGo(tourIdx - 1);
+  });
+
   // ---------- Boot ----------
   window.addEventListener('resize', drawCurve);
   $('research').addEventListener('toggle', () => { if ($('research').open) drawCurve(); });
@@ -1167,6 +1375,7 @@ const PRETRAINED = {"theta":[-0.6583,-0.24839,-0.57415,0.1816,-0.21995,0.31525,-
   drawCurve();
   runBench();
   requestAnimationFrame(frame);
+  if (/[?&]tour\b/.test(location.search) || location.hash === '#tour') setTimeout(() => tourGo(0), 600);
 })();
 </script>
 

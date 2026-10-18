@@ -1,6 +1,20 @@
 # Kessler-Gym
 
-Reinforcement-learning environment for satellite collision avoidance in low Earth orbit. Open `index.html` in a browser for the live demo (no install needed).
+**An AI that teaches satellites to dodge space junk.** A reinforcement-learning environment and live mission dashboard for satellite collision avoidance in low Earth orbit.
+
+### ▶ Live demo: **[trykessler.work](http://trykessler.work)** · guided tour: **[trykessler.work/?tour](http://trykessler.work/?tour)**
+
+No install, no backend: it is one self-contained HTML page (you can also open `index.html` locally).
+
+## For judges: the 60-second guided demo
+
+Press **Watch the 60-second guided demo** at the top of the page (or open `/?tour`). The tour highlights each panel, explains it in plain English, and flies one showcase scenario (#3700) three times:
+
+1. **No avoidance:** 3 of 5 passes are unsafe.
+2. **Operator rule** (today's practice: burn when collision probability > 1e-4): 1 unsafe pass, and it burns its whole 4 m/s fuel tank.
+3. **AI pilot:** all 5 cleared, 3.78 m/s of fuel, and it stays ~5× closer to its orbit than the rule.
+
+It then shows the honest average over 300 held-out scenarios (where the rule still has fewer violations) and starts live in-browser training. Arrow keys move through the tour; Esc exits.
 
 ## Explore the demo
 
