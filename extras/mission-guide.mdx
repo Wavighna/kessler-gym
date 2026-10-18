@@ -1,0 +1,59 @@
+export const PolicyCard = ({ title, children }) => (
+  <section style={{ padding: "1.25rem", border: "1px solid #334155", borderRadius: "0.75rem", marginBlock: "1rem" }}>
+    <h3 style={{ marginTop: 0 }}>{title}</h3>
+    <div>{children}</div>
+  </section>
+);
+
+# A mission through Kessler
+
+This standalone MDX guide can be rendered in an MDX-enabled documentation app.
+It is not imported by the current static website and does not add a documentation
+framework to the live demo.
+
+## 1. Follow the satellite
+
+The amber marker represents the controlled satellite. The surrounding objects
+are simulated debris. The globe provides orbital context; the encounter view
+shows the predicted pass relative to a 200 metre keep-out zone.
+
+## 2. Understand the uncertainty
+
+A predicted miss is an estimate, not a guarantee. Tracking uncertainty decreases
+as closest approach gets nearer. Earlier maneuvers can be economical, while later
+maneuvers use better information. The simulation makes that trade-off visible.
+
+## 3. Compare the same mission
+
+<PolicyCard title="AI policy">
+  A pretrained network balances unsafe passes, fuel use and distance from the
+  assigned orbit. Its combined score should be evaluated alongside each metric.
+</PolicyCard>
+
+<PolicyCard title="Operator rule">
+  A threshold-based controller waits for its decision point, performs an
+  avoidance maneuver when required, and attempts to return to the assigned slot.
+</PolicyCard>
+
+<PolicyCard title="No avoidance">
+  Zero maneuver inputs provide a baseline. Compare its outcome against the other
+  controllers on the same scenario before making a claim about improvement.
+</PolicyCard>
+
+## 4. Read the results
+
+| Measurement | Interpretation |
+| --- | --- |
+| Keep-out violations | Lower is better; measures unsafe simulated passes |
+| Mean delta-v | Lower means less maneuvering fuel used |
+| Orbit deviation | Lower means closer to the assigned position |
+| Episode return | Higher is better for the combined training objective |
+
+Use the shared 300-scenario benchmark for the built-in controllers. A policy
+trained in the browser uses a separately labeled 64-scenario evaluation, so its
+numbers are not an identical-size comparison.
+
+## 5. Explore the implementation
+
+The active demo uses `core.js`, `template.html`, `weights.json` and `build.js`.
+The separate TSX prototype and these extras are optional reference material.

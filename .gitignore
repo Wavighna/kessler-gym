@@ -1,2 +1,5 @@
 train_log.txt
 node_modules/
+
+# Selected extras are explicitly tracked; ignore new scratch files and outputs.
+/extras/
