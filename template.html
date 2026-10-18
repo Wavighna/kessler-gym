@@ -1,0 +1,660 @@
+<meta charset="utf-8">
+<title>Kessler Gym</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Saira+Condensed:wght@500;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: mission-ops console. Dark-only by choice: a flight-dynamics screen, panels on an ink ground. */
+:root {
+  color-scheme: dark;
+  --ink: #090d15;
+  --panel: #0f1522;
+  --panel-2: #141c2c;
+  --line: #222d42;
+  --fg: #d9e0ec;
+  --muted: #8592ab;
+  --amber: #f0b23e;      /* our satellite, primary accent */
+  --rl: #6fc6ff;         /* learned policy */
+  --rule: #c49bff;       /* operator baseline */
+  --noop: #7a8496;
+  --safe: #45cf94;
+  --threat: #ff5f5f;
+  --f-display: "Saira Condensed", "Arial Narrow", sans-serif;
+  --f-body: "IBM Plex Sans", system-ui, sans-serif;
+  --f-mono: "IBM Plex Mono", ui-monospace, Consolas, monospace;
+}
+html, body { background: var(--ink); color: var(--fg); }
+body { font-family: var(--f-body); font-size: 14px; line-height: 1.5; }
+.wrap { max-width: 1320px; margin: 0 auto; padding-block: 20px 48px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); display: flex; flex-direction: column; gap: 16px; }
+header { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 12px 24px; border-bottom: 1px solid var(--line); padding-bottom: 14px; }
+h1 { font-family: var(--f-display); font-weight: 700; font-size: 44px; line-height: 1; letter-spacing: 0.02em; margin: 0; text-transform: uppercase; }
+h1 span { color: var(--amber); }
+.sub { color: var(--muted); max-width: 70ch; margin: 6px 0 0; text-wrap: pretty; }
+h2 { font-family: var(--f-display); font-weight: 500; font-size: 15px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); margin: 0; }
+h3 { font-family: var(--f-display); font-weight: 700; font-size: 20px; letter-spacing: 0.02em; margin: 0; text-wrap: balance; }
+.mono { font-family: var(--f-mono); font-variant-numeric: tabular-nums; }
+.grid { display: grid; gap: 16px; grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr); }
+.grid > * { min-width: 0; }
+.panel { background: var(--panel); border: 1px solid var(--line); border-radius: 6px; padding: 14px; display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+.panel-head { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; flex-wrap: wrap; }
+.legend { display: flex; gap: 12px; flex-wrap: wrap; color: var(--muted); font-size: 12px; }
+.legend i { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 5px; vertical-align: -1px; }
+canvas { display: block; width: 100%; }
+#globe { aspect-ratio: 16 / 11; max-width: 100%; border-radius: 4px; background: var(--ink); cursor: grab; touch-action: none; }
+#globe:active { cursor: grabbing; }
+#bplane { aspect-ratio: 1 / 1; max-width: 100%; }
+#hill, #timeline { aspect-ratio: 3 / 1; max-width: 100%; }
+#timeline { aspect-ratio: 4 / 1; }
+#curve { aspect-ratio: 2.2 / 1; max-width: 100%; }
+.controls { display: flex; flex-wrap: wrap; gap: 8px 14px; align-items: center; }
+.seg { display: inline-flex; border: 1px solid var(--line); border-radius: 5px; overflow: hidden; flex-wrap: wrap; }
+.seg button { border: 0; border-right: 1px solid var(--line); }
+.seg button:last-child { border-right: 0; }
+button { font: 500 13px var(--f-body); color: var(--fg); background: var(--panel-2); border: 1px solid var(--line); border-radius: 5px; padding: 7px 12px; cursor: pointer; }
+.seg button { border-radius: 0; }
+button:hover { background: #1b2539; }
+button:focus-visible, input:focus-visible { outline: 2px solid var(--amber); outline-offset: 2px; }
+button[aria-pressed="true"] { background: #23304a; color: #fff; box-shadow: inset 0 -2px 0 var(--sel, var(--amber)); }
+button:disabled { opacity: 0.45; cursor: default; }
+button.primary { background: var(--amber); color: #1a1205; border-color: var(--amber); font-weight: 600; }
+button.primary:hover { background: #ffc65c; }
+label { color: var(--muted); font-size: 12px; display: inline-flex; align-items: center; gap: 8px; }
+input[type="range"] { accent-color: var(--amber); width: 110px; }
+.tiles { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+.tile { background: var(--panel-2); border: 1px solid var(--line); border-radius: 5px; padding: 8px 10px; min-width: 0; }
+.tile .k { font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+.tile .v { font-family: var(--f-mono); font-size: 18px; font-variant-numeric: tabular-nums; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.status { font-family: var(--f-mono); font-size: 12px; padding: 6px 10px; border-radius: 4px; background: var(--panel-2); border: 1px solid var(--line); color: var(--muted); }
+.status.alert { color: var(--threat); border-color: #5a2630; }
+.status.ok { color: var(--safe); border-color: #1f4d3a; }
+.tablewrap { overflow-x: auto; }
+table { border-collapse: collapse; width: 100%; font-size: 13px; }
+th, td { text-align: right; padding: 7px 10px; border-bottom: 1px solid var(--line); white-space: nowrap; }
+th:first-child, td:first-child { text-align: left; }
+th { font-weight: 500; color: var(--muted); font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; }
+td.mono { font-family: var(--f-mono); }
+.dot { display: inline-block; width: 9px; height: 9px; border-radius: 50%; margin-right: 8px; }
+.bar { height: 6px; border-radius: 3px; background: var(--line); margin-top: 4px; overflow: hidden; }
+.bar > span { display: block; height: 100%; }
+.note { color: var(--muted); font-size: 12.5px; margin: 0; max-width: 75ch; text-wrap: pretty; }
+.explain { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
+.explain p, .explain li { color: #b8c2d4; font-size: 13.5px; max-width: 65ch; }
+.explain ul { padding-left: 18px; margin: 0; display: flex; flex-direction: column; gap: 4px; }
+.explain p { margin: 0; }
+pre.eq { font-family: var(--f-mono); font-size: 12px; color: var(--fg); background: var(--panel-2); border: 1px solid var(--line); border-radius: 5px; padding: 10px; margin: 0; overflow-x: auto; line-height: 1.6; }
+.kbd { font-family: var(--f-mono); font-size: 12px; color: var(--amber); }
+@media (max-width: 980px) { .grid, .explain { grid-template-columns: minmax(0, 1fr); } }
+@media (max-width: 520px) { h1 { font-size: 34px; } .tiles { grid-template-columns: repeat(2, minmax(0, 1fr)); } #hill, #timeline { aspect-ratio: 2 / 1; } }
+@media (prefers-reduced-motion: reduce) { * { scroll-behavior: auto; } }
+</style>
+
+<div class="wrap">
+  <header>
+    <div>
+      <h1>Kessler<span>·</span>Gym</h1>
+      <p class="sub">A reinforcement-learning environment for satellite collision avoidance in low Earth orbit. An agent flies a 550&nbsp;km satellite through late-notice debris conjunctions, using real Clohessy–Wiltshire relative dynamics, shrinking tracking uncertainty and a 4&nbsp;m/s fuel budget. It learns when to burn, which way, and how to return to its slot.</p>
+    </div>
+    <div class="status" id="status">Loading…</div>
+  </header>
+
+  <section class="panel" aria-label="Simulation controls">
+    <div class="controls">
+      <h2>Pilot</h2>
+      <div class="seg" role="group" aria-label="Policy">
+        <button id="p-rl" data-p="rl" style="--sel: var(--rl)">RL agent (pretrained)</button>
+        <button id="p-live" data-p="live" style="--sel: var(--rl)" disabled>RL agent (trained here)</button>
+        <button id="p-rule" data-p="rule" style="--sel: var(--rule)">Operator rule</button>
+        <button id="p-noop" data-p="noop" style="--sel: var(--noop)">No maneuvers</button>
+      </div>
+      <button id="play">Pause</button>
+      <button id="next">New scenario</button>
+      <button id="replay">Replay</button>
+      <label for="speed">Speed <input id="speed" type="range" min="2" max="40" value="10"> <span class="mono" id="speedv">10 min/s</span></label>
+      <span class="mono note" id="seedv"></span>
+    </div>
+  </section>
+
+  <div class="grid">
+    <section class="panel">
+      <div class="panel-head">
+        <h3>LEO debris field</h3>
+        <div class="legend"><span><i style="background: var(--amber)"></i>Our satellite, 550 km / 53°</span><span><i style="background: #5d6f93"></i>Tracked objects (simulated shells)</span><span><i style="background: var(--threat)"></i>Active conjunction</span></div>
+      </div>
+      <canvas id="globe"></canvas>
+      <p class="note">Drag to rotate. Debris shells follow the real LEO population structure: Starlink-like 53° at 550 km, sun-synchronous 97–99° at 700–850 km, Iridium 86° at 780 km, and the 1,200 km shell. Each point is propagated on its own Keplerian orbit in a vertex shader.</p>
+    </section>
+
+    <section class="panel">
+      <div class="panel-head">
+        <h3>Encounter B-plane</h3>
+        <span class="mono note" id="bpinfo">–</span>
+      </div>
+      <canvas id="bplane"></canvas>
+      <div class="legend"><span><i style="background: var(--threat)"></i>200 m keep-out around debris</span><span><i style="background: var(--amber)"></i>Predicted miss ± 1σ / 3σ</span><span><i style="background: transparent; border: 1px solid var(--noop)"></i>Miss with no maneuver</span></div>
+      <div class="tiles">
+        <div class="tile"><div class="k">Mission clock</div><div class="v" id="t-clock">T+00:00</div></div>
+        <div class="tile"><div class="k">Δv used</div><div class="v" id="t-dv">0.000 m/s</div></div>
+        <div class="tile"><div class="k">Slot error</div><div class="v" id="t-slot">0 m</div></div>
+        <div class="tile"><div class="k">Highest Pc</div><div class="v" id="t-pc">–</div></div>
+        <div class="tile"><div class="k">Cleared</div><div class="v" id="t-ok" style="color: var(--safe)">0</div></div>
+        <div class="tile"><div class="k">Violations</div><div class="v" id="t-bad" style="color: var(--threat)">0</div></div>
+      </div>
+    </section>
+  </div>
+
+  <div class="grid">
+    <section class="panel">
+      <div class="panel-head"><h3>Relative motion in the Hill frame</h3><span class="note">along-track (x-axis) vs radial (y-axis), metres from the assigned slot</span></div>
+      <canvas id="hill"></canvas>
+    </section>
+    <section class="panel">
+      <div class="panel-head"><h3>Conjunction timeline</h3><span class="note">tracked window → TCA, and each burn</span></div>
+      <canvas id="timeline"></canvas>
+    </section>
+  </div>
+
+  <div class="grid">
+    <section class="panel">
+      <div class="panel-head"><h3>Benchmark on 300 held-out scenarios</h3><span class="note" id="benchnote">running in a Web Worker…</span></div>
+      <div class="tablewrap">
+        <table>
+          <thead><tr><th>Policy</th><th>Keep-out violations</th><th>Mean Δv per episode</th><th>Mean slot error</th><th>Episode return</th></tr></thead>
+          <tbody id="bench"></tbody>
+        </table>
+      </div>
+      <p class="note">Every scenario has 2–5 debris objects aimed inside 1σ = 180 m of the satellite, detected 15–60 minutes before closest approach. "Operator rule" is a standard collision-avoidance procedure: wait for the 25-minute decision point, burn if Pc &gt; 10⁻⁴ until the predicted miss clears R + 2.5σ, then fly back to the slot with a two-impulse CW transfer.</p>
+    </section>
+
+    <section class="panel">
+      <div class="panel-head"><h3>Train an agent from scratch</h3><span class="mono note" id="trainstat">idle</span></div>
+      <div class="controls">
+        <button class="primary" id="train">Start training</button>
+        <button id="stoptrain" disabled>Stop</button>
+        <span class="note" id="workers"></span>
+      </div>
+      <canvas id="curve"></canvas>
+      <p class="note">Evolution Strategies (Salimans et al., 2017) with antithetic sampling, centred-rank fitness shaping and Adam. Each worker receives only the parameter vector and integer noise seeds, rebuilds the perturbations locally and returns two numbers, so communication cost is independent of network size. Dashed lines show the baselines' return on the same scale.</p>
+    </section>
+  </div>
+
+  <section class="panel">
+    <h3>How it works</h3>
+    <div class="explain">
+      <div>
+        <h2>Environment</h2>
+        <pre class="eq">ẍ = 3n²x + 2nẏ + aₓ      (radial)
+ÿ = −2nẋ + a_y           (along-track)
+z̈ = −n²z + a_z           (cross-track)
+n = √(μ/r³) = 1.10e-3 rad/s   r = 6,928 km</pre>
+        <p>Propagated with the closed-form CW state-transition matrix Φ(τ), so a 4-hour episode costs microseconds. Debris passes at 2–14 km/s, so each encounter is evaluated in its B-plane: only displacement perpendicular to the relative velocity counts.</p>
+      </div>
+      <div>
+        <h2>Observation and reward</h2>
+        <ul>
+          <li>28-dim observation: own position, velocity, fuel and clock, plus the two most urgent conjunctions.</li>
+          <li>Per conjunction: time to TCA, noisy predicted miss vector, 1σ uncertainty (400 m → 25 m as tracking improves), Pc from the Rice distribution, and the physics-informed sensitivity ∂|miss|/∂Δv = Φᵣᵥ(τ)ᵀ m̂.</li>
+          <li>Reward: −30 per keep-out violation, a Gaussian proximity penalty, −2 per m/s of Δv, and a quadratic slot-keeping cost.</li>
+        </ul>
+      </div>
+      <div>
+        <h2>The trade-off the agent learns</h2>
+        <p>An early burn is cheap because along-track drift grows as 3·Δv·τ, but the miss estimate is still mostly noise. A late burn sees the truth but needs far more Δv. The agent also has to handle overlapping conjunctions, where dodging one object can move it toward the next, and then spend fuel to get back to its slot.</p>
+        <p class="note">Policy: 28→32→32→3 tanh MLP (2,083 parameters) that outputs an impulsive Δv of up to 8 cm/s per axis each minute.</p>
+      </div>
+    </div>
+  </section>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script id="kg-core">
+/*__CORE__*/
+</script>
+<script>
+const PRETRAINED = /*__WEIGHTS__*/;
+</script>
+<script>
+(function () {
+  'use strict';
+  const C = KG.CFG, DT = C.DT, TMAX = C.T_MAX, RKO = C.R_KO;
+  const css = (n) => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+  const COL = { amber: css('--amber'), rl: css('--rl'), rule: css('--rule'), noop: css('--noop'), safe: css('--safe'), threat: css('--threat'), line: css('--line'), muted: css('--muted'), fg: css('--fg'), panel: css('--panel'), ink: css('--ink') };
+  const $ = (id) => document.getElementById(id);
+  const fmtClock = (s) => { const m = Math.floor(s / 60); return 'T+' + String(Math.floor(m / 60)).padStart(2, '0') + ':' + String(m % 60).padStart(2, '0'); };
+
+  // ---------- Policies ----------
+  const thetaRL = Float64Array.from(PRETRAINED.theta);
+  let thetaLive = null;
+  const POL = {
+    rl: { name: 'RL agent (pretrained)', color: COL.rl, act: (o) => KG.mlpAct(thetaRL, o) },
+    live: { name: 'RL agent (trained here)', color: COL.rl, act: (o) => KG.mlpAct(thetaLive, o) },
+    rule: { name: 'Operator rule', color: COL.rule, act: (o, env) => KG.rulePolicy(env) },
+    noop: { name: 'No maneuvers', color: COL.noop, act: () => [0, 0, 0] },
+  };
+  let polKey = 'rl';
+
+  // ---------- Simulation state ----------
+  let env, obs, seed = 424242, traj, burns, trails, finished, running = true, endPause = 0;
+  function newEpisode(s) {
+    seed = s;
+    env = new KG.Env();
+    obs = env.reset(seed);
+    traj = [env.p.slice()]; burns = []; trails = {}; finished = null;
+    recordTrails();
+    $('seedv').textContent = 'scenario #' + seed + ' · ' + env.conj.length + ' conjunctions';
+  }
+  function recordTrails() {
+    for (const a of env.lastAssess || []) {
+      (trails[a.k.id] = trails[a.k.id] || []).push({ q: a.q.slice(), sig: a.sig, t: env.t });
+    }
+  }
+  function simStep() {
+    if (env.t >= TMAX) return;
+    const a = POL[polKey].act(obs, env);
+    const s = env.step(a);
+    obs = s.obs;
+    traj.push(env.p.slice());
+    burns.push(KG.vec.norm(env.lastDv));
+    for (const k of s.events) {
+      const dd = KG.vec.sub(env.p, k.pd);
+      k.qTrue = [KG.vec.dot(dd, k.e1), KG.vec.dot(dd, k.e2)];
+    }
+    recordTrails();
+    if (s.done) finished = performance.now();
+  }
+
+  // ---------- Controls ----------
+  function setPolicy(k) {
+    polKey = k;
+    document.querySelectorAll('[data-p]').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.p === k)));
+    newEpisode(seed);
+  }
+  document.querySelectorAll('[data-p]').forEach((b) => b.addEventListener('click', () => setPolicy(b.dataset.p)));
+  $('play').addEventListener('click', () => { running = !running; $('play').textContent = running ? 'Pause' : 'Play'; });
+  $('next').addEventListener('click', () => newEpisode(1 + Math.floor(Math.random() * 899999)));
+  $('replay').addEventListener('click', () => newEpisode(seed));
+  const speedEl = $('speed');
+  const speedLabel = () => { $('speedv').textContent = speedEl.value + ' min/s'; };
+  speedEl.addEventListener('input', speedLabel); speedLabel();
+
+  // ---------- Canvas helper ----------
+  function fit(cv) {
+    const r = cv.getBoundingClientRect(), d = Math.min(2, window.devicePixelRatio || 1);
+    const w = Math.max(1, Math.round(r.width * d)), h = Math.max(1, Math.round(r.height * d));
+    if (cv.width !== w || cv.height !== h) { cv.width = w; cv.height = h; }
+    const ctx = cv.getContext('2d');
+    ctx.setTransform(d, 0, 0, d, 0, 0);
+    return { ctx, w: r.width, h: r.height };
+  }
+  const MONO = '11px "IBM Plex Mono", ui-monospace, monospace';
+
+  // ---------- B-plane view ----------
+  function focusConj() {
+    const recent = env.conj.filter((k) => k.done && env.t - k.tca < 14).pop();
+    if (recent) return recent;
+    const a = (env.lastAssess || [])[0];
+    return a ? a.k : null;
+  }
+  function drawBplane() {
+    const { ctx, w, h } = fit($('bplane'));
+    ctx.clearRect(0, 0, w, h);
+    const cx = w / 2, cy = h / 2, span = 1300, sc = (Math.min(w, h) / 2 - 12) / span;
+    ctx.strokeStyle = COL.line; ctx.lineWidth = 1; ctx.font = MONO; ctx.fillStyle = COL.muted;
+    for (let r = 250; r <= 1250; r += 250) { ctx.beginPath(); ctx.arc(cx, cy, r * sc, 0, Math.PI * 2); ctx.stroke(); }
+    ctx.beginPath(); ctx.moveTo(cx - span * sc, cy); ctx.lineTo(cx + span * sc, cy); ctx.moveTo(cx, cy - span * sc); ctx.lineTo(cx, cy + span * sc); ctx.stroke();
+    ctx.fillText('500 m', cx + 500 * sc + 3, cy - 4); ctx.fillText('1 km', cx + 1000 * sc + 3, cy - 4);
+    ctx.fillText('ê₁ ≈ radial', cx + span * sc - 78, cy + 14); ctx.fillText('ê₂', cx + 4, cy - span * sc + 12);
+    const k = focusConj();
+    // keep-out
+    ctx.fillStyle = 'rgba(255,95,95,0.14)'; ctx.strokeStyle = COL.threat; ctx.lineWidth = 1.5;
+    ctx.beginPath(); ctx.arc(cx, cy, RKO * sc, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = COL.threat; ctx.beginPath(); ctx.arc(cx, cy, 3, 0, Math.PI * 2); ctx.fill();
+    if (!k) {
+      ctx.fillStyle = COL.muted; ctx.font = '13px "IBM Plex Sans", sans-serif'; ctx.textAlign = 'center';
+      ctx.fillText('No tracked conjunction. Station-keeping.', cx, cy + RKO * sc + 26); ctx.textAlign = 'left';
+      $('bpinfo').textContent = 'idle';
+      return;
+    }
+    const P = (q) => [cx + q[0] * sc, cy - q[1] * sc];
+    const tr = trails[k.id] || [];
+    ctx.strokeStyle = COL.amber; ctx.globalAlpha = 0.55; ctx.lineWidth = 1.5; ctx.beginPath();
+    tr.forEach((s, i) => { const [x, y] = P(s.q); i ? ctx.lineTo(x, y) : ctx.moveTo(x, y); }); ctx.stroke(); ctx.globalAlpha = 1;
+    if (k.done) {
+      const [nx, ny] = P(k.mt);
+      ctx.strokeStyle = COL.noop; ctx.setLineDash([3, 3]); ctx.beginPath(); ctx.arc(nx, ny, 6, 0, Math.PI * 2); ctx.stroke(); ctx.setLineDash([]);
+      const [tx, ty] = P(k.qTrue);
+      ctx.fillStyle = k.viol ? COL.threat : COL.safe; ctx.beginPath(); ctx.arc(tx, ty, 6, 0, Math.PI * 2); ctx.fill();
+      ctx.font = '600 13px "IBM Plex Sans", sans-serif'; ctx.fillText(k.viol ? 'VIOLATION  ' + k.miss.toFixed(0) + ' m' : 'CLEARED  ' + k.miss.toFixed(0) + ' m', tx + 10, ty + 4);
+      $('bpinfo').textContent = 'object ' + (k.id + 1) + ' · TCA passed · ' + (k.speed / 1000).toFixed(1) + ' km/s';
+    } else {
+      const last = tr[tr.length - 1];
+      if (last) {
+        const [x, y] = P(last.q);
+        ctx.strokeStyle = COL.amber; ctx.fillStyle = 'rgba(240,178,62,0.10)';
+        ctx.beginPath(); ctx.arc(x, y, last.sig * 3 * sc, 0, Math.PI * 2); ctx.fill();
+        ctx.setLineDash([4, 4]); ctx.stroke(); ctx.setLineDash([]);
+        ctx.beginPath(); ctx.arc(x, y, last.sig * sc, 0, Math.PI * 2); ctx.stroke();
+        ctx.fillStyle = COL.amber; ctx.beginPath(); ctx.arc(x, y, 5, 0, Math.PI * 2); ctx.fill();
+      }
+      const tau = (k.tca - env.t) * DT;
+      $('bpinfo').textContent = 'object ' + (k.id + 1) + ' · TCA in ' + Math.round(tau / 60) + ' min · ' + (k.speed / 1000).toFixed(1) + ' km/s';
+    }
+  }
+
+  // ---------- Hill frame ----------
+  function drawHill() {
+    const { ctx, w, h } = fit($('hill'));
+    ctx.clearRect(0, 0, w, h);
+    const spanY = 2500, sc = (w / 2 - 10) / spanY, cx = w / 2, cy = h / 2;
+    ctx.strokeStyle = COL.line; ctx.lineWidth = 1; ctx.font = MONO; ctx.fillStyle = COL.muted;
+    for (let a = -2000; a <= 2000; a += 500) { ctx.beginPath(); ctx.moveTo(cx + a * sc, 0); ctx.lineTo(cx + a * sc, h); ctx.stroke(); }
+    for (let r = -1000; r <= 1000; r += 500) { if (Math.abs(r * sc) < h / 2) { ctx.beginPath(); ctx.moveTo(0, cy - r * sc); ctx.lineTo(w, cy - r * sc); ctx.stroke(); } }
+    ctx.fillText('−2 km', cx - 2000 * sc + 3, h - 6); ctx.fillText('+2 km', cx + 2000 * sc + 3, h - 6); ctx.fillText('slot', cx + 6, cy - 6);
+    ctx.strokeStyle = COL.amber; ctx.setLineDash([2, 3]); ctx.strokeRect(cx - 250 * sc, cy - 250 * sc, 500 * sc, 500 * sc); ctx.setLineDash([]);
+    ctx.strokeStyle = POL[polKey].color; ctx.lineWidth = 1.6; ctx.beginPath();
+    traj.forEach((p, i) => { const x = cx + p[1] * sc, y = cy - p[0] * sc; i ? ctx.lineTo(x, y) : ctx.moveTo(x, y); }); ctx.stroke();
+    // burns as ticks
+    ctx.fillStyle = COL.amber;
+    burns.forEach((b, i) => { if (b > 1e-3) { const p = traj[i]; ctx.globalAlpha = Math.min(1, 0.3 + b / C.DV_MAX); ctx.beginPath(); ctx.arc(cx + p[1] * sc, cy - p[0] * sc, 2.2, 0, Math.PI * 2); ctx.fill(); } });
+    ctx.globalAlpha = 1;
+    const p = env.p; ctx.fillStyle = COL.amber; ctx.beginPath(); ctx.arc(cx + p[1] * sc, cy - p[0] * sc, 5, 0, Math.PI * 2); ctx.fill();
+  }
+
+  // ---------- Timeline ----------
+  function drawTimeline() {
+    const { ctx, w, h } = fit($('timeline'));
+    ctx.clearRect(0, 0, w, h);
+    const L = 8, R = w - 8, X = (t) => L + (R - L) * t / TMAX;
+    const n = env.conj.length, laneTop = 6, burnH = Math.max(28, h * 0.3), lanes = h - burnH - 22 - laneTop, lh = Math.min(16, lanes / n);
+    ctx.font = MONO;
+    env.conj.forEach((k, i) => {
+      const y = laneTop + i * lh * 1.25;
+      ctx.fillStyle = 'rgba(255,95,95,0.18)';
+      ctx.fillRect(X(k.tdet), y, X(k.tca) - X(k.tdet), lh * 0.8);
+      ctx.fillStyle = k.done ? (k.viol ? COL.threat : COL.safe) : COL.threat;
+      ctx.fillRect(X(k.tca) - 1.5, y - 1, 3, lh * 0.8 + 2);
+      ctx.fillStyle = COL.muted; ctx.fillText('obj ' + (k.id + 1), X(k.tdet) + 4, y + lh * 0.65);
+    });
+    const by = h - 18;
+    ctx.strokeStyle = COL.line; ctx.beginPath(); ctx.moveTo(L, by); ctx.lineTo(R, by); ctx.stroke();
+    ctx.fillStyle = COL.amber;
+    burns.forEach((b, i) => { const bh = (b / (C.DV_MAX * Math.sqrt(3))) * burnH; if (bh > 0.3) ctx.fillRect(X(i), by - bh, Math.max(1, (R - L) / TMAX - 0.5), bh); });
+    ctx.fillStyle = COL.muted;
+    for (let hr = 0; hr <= 4; hr++) { ctx.fillText(hr + 'h', Math.min(X(hr * 60) - 4, R - 14), h - 4); }
+    ctx.strokeStyle = COL.fg; ctx.globalAlpha = 0.7; ctx.beginPath(); ctx.moveTo(X(env.t), 0); ctx.lineTo(X(env.t), by); ctx.stroke(); ctx.globalAlpha = 1;
+    ctx.fillText('Δv', L, by - burnH - 2);
+  }
+
+  // ---------- Telemetry ----------
+  function drawTiles() {
+    $('t-clock').textContent = fmtClock(env.t * DT);
+    $('t-dv').textContent = env.dvUsed.toFixed(3) + ' m/s';
+    $('t-slot').textContent = KG.vec.norm(env.p).toFixed(0) + ' m';
+    const pcs = (env.lastAssess || []).map((a) => a.pc);
+    const pc = pcs.length ? Math.max(...pcs) : 0;
+    $('t-pc').textContent = pcs.length ? (pc < 1e-9 ? '< 1e-9' : pc.toExponential(1)) : '–';
+    $('t-pc').style.color = pc > 1e-4 ? COL.threat : COL.fg;
+    let ok = 0, bad = 0;
+    env.conj.forEach((k) => { if (k.done) (k.viol ? bad++ : ok++); });
+    $('t-ok').textContent = ok; $('t-bad').textContent = bad;
+    const st = $('status');
+    if (finished) { st.className = 'status ' + (bad ? 'alert' : 'ok'); st.textContent = POL[polKey].name + ': ' + ok + ' cleared, ' + bad + ' violated, Δv ' + env.dvUsed.toFixed(2) + ' m/s'; }
+    else if (pc > 1e-4) { st.className = 'status alert'; st.textContent = 'High-risk conjunction · Pc ' + pc.toExponential(1); }
+    else { st.className = 'status'; st.textContent = POL[polKey].name + ' flying'; }
+  }
+
+  // ---------- 3D globe ----------
+  const G = {};
+  function orbitPos(raan, inc, u, r) { // z-up ECI, returned in three.js y-up coordinates
+    const cu = Math.cos(u), su = Math.sin(u), ci = Math.cos(inc), si = Math.sin(inc), cO = Math.cos(raan), sO = Math.sin(raan);
+    const x = r * (cO * cu - sO * su * ci), y = r * (sO * cu + cO * su * ci), z = r * (su * si);
+    return new THREE.Vector3(x, z, -y);
+  }
+  const SAT = { raan: 0.6, inc: 53 * Math.PI / 180, r: KG.R0 / KG.RE };
+  function initGlobe() {
+    if (!window.THREE) return false;
+    const cv = $('globe');
+    const renderer = new THREE.WebGLRenderer({ canvas: cv, antialias: true, alpha: false });
+    renderer.setClearColor(new THREE.Color(COL.ink), 1);
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(38, 16 / 11, 0.01, 100);
+    const world = new THREE.Group(); scene.add(world);
+    // Earth
+    world.add(new THREE.Mesh(new THREE.SphereGeometry(1, 64, 48), new THREE.MeshBasicMaterial({ color: 0x0c1830 })));
+    const grat = [];
+    for (let lat = -75; lat <= 75; lat += 15) { const r = Math.cos(lat * Math.PI / 180), y = Math.sin(lat * Math.PI / 180); for (let i = 0; i < 96; i++) { const a = i / 96 * Math.PI * 2, b = (i + 1) / 96 * Math.PI * 2; grat.push(r * Math.cos(a) * 1.001, y * 1.001, r * Math.sin(a) * 1.001, r * Math.cos(b) * 1.001, y * 1.001, r * Math.sin(b) * 1.001); } }
+    for (let lon = 0; lon < 180; lon += 15) { const L = lon * Math.PI / 180; for (let i = 0; i < 96; i++) { const a = i / 96 * Math.PI * 2, b = (i + 1) / 96 * Math.PI * 2; grat.push(Math.cos(a) * Math.cos(L) * 1.001, Math.sin(a) * 1.001, Math.cos(a) * Math.sin(L) * 1.001, Math.cos(b) * Math.cos(L) * 1.001, Math.sin(b) * 1.001, Math.cos(b) * Math.sin(L) * 1.001); } }
+    const gg = new THREE.BufferGeometry(); gg.setAttribute('position', new THREE.Float32BufferAttribute(grat, 3));
+    world.add(new THREE.LineSegments(gg, new THREE.LineBasicMaterial({ color: 0x1d3358, transparent: true, opacity: 0.7 })));
+    // atmosphere rim
+    const atm = new THREE.ShaderMaterial({
+      transparent: true, side: THREE.BackSide, depthWrite: false, blending: THREE.AdditiveBlending,
+      vertexShader: 'varying vec3 vN; void main(){ vN = normalize(normalMatrix*normal); gl_Position = projectionMatrix*modelViewMatrix*vec4(position,1.0);} ',
+      fragmentShader: 'varying vec3 vN; void main(){ float i = pow(0.75 - dot(vN, vec3(0.0,0.0,1.0)), 3.0); gl_FragColor = vec4(0.35,0.6,1.0,1.0)*i; }',
+    });
+    world.add(new THREE.Mesh(new THREE.SphereGeometry(1.12, 48, 32), atm));
+    // Debris population, propagated on the GPU
+    const shells = [[2600, 540, 560, 53, 1.5], [900, 690, 860, 97.8, 1.2], [500, 770, 790, 86.4, 0.4], [700, 1150, 1250, 87.9, 1], [1300, 400, 1500, 0, 90]];
+    const pos = [], par = [];
+    const rnd = Math.random;
+    for (const [n, a0, a1, inc, spread] of shells) for (let i = 0; i < n; i++) {
+      const alt = a0 + (a1 - a0) * rnd(), r = 1 + alt * 1000 / KG.RE;
+      const incR = (inc + (rnd() * 2 - 1) * spread) * Math.PI / 180;
+      pos.push(0, 0, 0); par.push(rnd() * Math.PI * 2, incR, rnd() * Math.PI * 2, r);
+    }
+    const dg = new THREE.BufferGeometry();
+    dg.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
+    dg.setAttribute('orb', new THREE.Float32BufferAttribute(par, 4));
+    const dmat = new THREE.ShaderMaterial({
+      transparent: true, depthWrite: false, blending: THREE.AdditiveBlending,
+      uniforms: { uT: { value: 0 }, uMu: { value: KG.MU / Math.pow(KG.RE, 3) }, uPx: { value: 1 } },
+      vertexShader: [
+        'attribute vec4 orb; uniform float uT; uniform float uMu; uniform float uPx; varying float vA;',
+        'void main(){ float r = orb.w; float n = sqrt(uMu/(r*r*r)); float u = orb.z + n*uT;',
+        ' float cO=cos(orb.x), sO=sin(orb.x), ci=cos(orb.y), si=sin(orb.y), cu=cos(u), su=sin(u);',
+        ' vec3 p = r*vec3(cO*cu - sO*su*ci, su*si, -(sO*cu + cO*su*ci));',
+        ' vec4 mv = modelViewMatrix*vec4(p,1.0); gl_Position = projectionMatrix*mv;',
+        ' gl_PointSize = uPx*1.8; vA = smoothstep(-1.2, 0.6, dot(normalize(p), normalize(cameraPosition)));}',
+      ].join('\n'),
+      fragmentShader: 'varying float vA; void main(){ vec2 c = gl_PointCoord-0.5; if(dot(c,c)>0.25) discard; gl_FragColor = vec4(0.45,0.55,0.75, 0.25+0.55*vA); }',
+    });
+    world.add(new THREE.Points(dg, dmat));
+    // Our orbit + satellite
+    const ring = [];
+    for (let i = 0; i <= 256; i++) { const v = orbitPos(SAT.raan, SAT.inc, i / 256 * Math.PI * 2, SAT.r); ring.push(v.x, v.y, v.z); }
+    const rg = new THREE.BufferGeometry(); rg.setAttribute('position', new THREE.Float32BufferAttribute(ring, 3));
+    world.add(new THREE.Line(rg, new THREE.LineBasicMaterial({ color: new THREE.Color(COL.amber), transparent: true, opacity: 0.45 })));
+    const sat = new THREE.Mesh(new THREE.SphereGeometry(0.022, 16, 12), new THREE.MeshBasicMaterial({ color: new THREE.Color(COL.amber) }));
+    world.add(sat);
+    const halo = new THREE.Mesh(new THREE.RingGeometry(0.035, 0.042, 40), new THREE.MeshBasicMaterial({ color: new THREE.Color(COL.amber), transparent: true, opacity: 0.8, side: THREE.DoubleSide }));
+    world.add(halo);
+    // threat markers
+    const threats = [];
+    for (let i = 0; i < 6; i++) {
+      const m = new THREE.Mesh(new THREE.SphereGeometry(0.014, 10, 8), new THREE.MeshBasicMaterial({ color: new THREE.Color(COL.threat) }));
+      const lg = new THREE.BufferGeometry(); lg.setAttribute('position', new THREE.Float32BufferAttribute([0, 0, 0, 0, 0, 0], 3));
+      const l = new THREE.Line(lg, new THREE.LineBasicMaterial({ color: new THREE.Color(COL.threat), transparent: true, opacity: 0.6 }));
+      m.visible = l.visible = false; world.add(m); world.add(l); threats.push({ m, l });
+    }
+    Object.assign(G, { renderer, scene, camera, world, dmat, sat, halo, threats, yaw: 0.4, pitch: 0.35, dist: 4.1, drag: null });
+    cv.addEventListener('pointerdown', (e) => { G.drag = { x: e.clientX, y: e.clientY, yaw: G.yaw, pitch: G.pitch }; cv.setPointerCapture(e.pointerId); });
+    cv.addEventListener('pointermove', (e) => { if (!G.drag) return; G.yaw = G.drag.yaw - (e.clientX - G.drag.x) * 0.006; G.pitch = Math.max(-1.3, Math.min(1.3, G.drag.pitch + (e.clientY - G.drag.y) * 0.006)); G.lastDrag = performance.now(); });
+    cv.addEventListener('pointerup', () => { G.drag = null; });
+    return true;
+  }
+  function drawGlobe(simSec) {
+    if (!G.renderer) return;
+    const cv = $('globe'), r = cv.getBoundingClientRect(), d = Math.min(2, window.devicePixelRatio || 1);
+    if (cv.width !== Math.round(r.width * d) || cv.height !== Math.round(r.height * d)) {
+      G.renderer.setPixelRatio(d); G.renderer.setSize(r.width, r.height, false); G.camera.aspect = r.width / r.height; G.camera.updateProjectionMatrix();
+    }
+    G.dmat.uniforms.uT.value = simSec; G.dmat.uniforms.uPx.value = d;
+    const u = KG.N * simSec;
+    const sp = orbitPos(SAT.raan, SAT.inc, u, SAT.r);
+    G.sat.position.copy(sp); G.halo.position.copy(sp);
+    // camera follows the satellite loosely unless the user is dragging
+    const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (!G.drag && (!G.lastDrag || performance.now() - G.lastDrag > 4000) && !reduce) {
+      const targetYaw = Math.atan2(sp.x, sp.z) + 0.5;
+      let dy = targetYaw - G.yaw; dy = Math.atan2(Math.sin(dy), Math.cos(dy));
+      G.yaw += dy * 0.02;
+    }
+    const cp = new THREE.Vector3(Math.sin(G.yaw) * Math.cos(G.pitch), Math.sin(G.pitch), Math.cos(G.yaw) * Math.cos(G.pitch)).multiplyScalar(G.dist);
+    G.camera.position.copy(cp); G.camera.lookAt(0, 0, 0);
+    G.halo.lookAt(cp);
+    // local frame for threat vectors
+    const rh = sp.clone().normalize();
+    const ahead = orbitPos(SAT.raan, SAT.inc, u + 0.001, SAT.r);
+    const th = ahead.sub(sp).normalize();
+    const nh = new THREE.Vector3().crossVectors(rh, th);
+    const act = env.upcoming();
+    G.threats.forEach((T, i) => {
+      const k = act[i];
+      if (!k) { T.m.visible = T.l.visible = false; return; }
+      const tau = (k.tca - env.t) * DT;
+      const dir = rh.clone().multiplyScalar(k.vhat[0]).add(th.clone().multiplyScalar(k.vhat[1])).add(nh.clone().multiplyScalar(k.vhat[2]));
+      const dist = Math.min(0.9, 0.06 + tau * k.speed / KG.RE * 0.03);
+      const mp = sp.clone().add(dir.multiplyScalar(-dist));
+      T.m.position.copy(mp); T.m.visible = T.l.visible = true;
+      const arr = T.l.geometry.attributes.position.array;
+      arr[0] = mp.x; arr[1] = mp.y; arr[2] = mp.z; arr[3] = sp.x; arr[4] = sp.y; arr[5] = sp.z;
+      T.l.geometry.attributes.position.needsUpdate = true;
+    });
+    G.renderer.render(G.scene, G.camera);
+  }
+
+  // ---------- Main loop ----------
+  let acc = 0, lastT = performance.now();
+  function frame(now) {
+    const dtReal = Math.min(0.1, (now - lastT) / 1000); lastT = now;
+    if (running) {
+      if (finished) {
+        if (now - finished > 3500) newEpisode(1 + Math.floor(Math.random() * 899999));
+      } else {
+        acc += dtReal * +speedEl.value;
+        while (acc >= 1 && env.t < TMAX) { simStep(); acc -= 1; }
+      }
+    }
+    const frac = running && !finished ? Math.min(1, acc) : 0;
+    drawGlobe((env.t + frac) * DT);
+    drawBplane(); drawHill(); drawTimeline(); drawTiles();
+    requestAnimationFrame(frame);
+  }
+
+  // ---------- Workers (benchmark + distributed ES) ----------
+  const workerSrc = document.getElementById('kg-core').textContent + `
+    self.onmessage = (e) => {
+      const d = e.data;
+      if (d.type === 'pairs') {
+        const th = Float64Array.from(d.theta);
+        self.postMessage({ id: d.id, res: d.epsSeeds.map((s) => KG.evalPair(th, s, d.sigma, d.envSeeds)) });
+      } else if (d.type === 'eval') {
+        const th = d.theta ? Float64Array.from(d.theta) : null;
+        const act = d.policy === 'mlp' ? (o) => KG.mlpAct(th, o) : d.policy === 'rule' ? (o, env) => KG.rulePolicy(env) : KG.noopPolicy;
+        self.postMessage({ id: d.id, res: KG.evaluate(act, d.seeds) });
+      }
+    };`;
+  const workerURL = URL.createObjectURL(new Blob([workerSrc], { type: 'text/javascript' }));
+  const nW = Math.max(2, Math.min(8, (navigator.hardwareConcurrency || 4) - 1));
+  const pool = Array.from({ length: nW }, () => new Worker(workerURL));
+  let msgId = 0;
+  const call = (w, msg) => new Promise((res) => {
+    const id = ++msgId;
+    const h = (e) => { if (e.data.id === id) { w.removeEventListener('message', h); res(e.data.res); } };
+    w.addEventListener('message', h); w.postMessage(Object.assign({ id }, msg));
+  });
+  $('workers').textContent = nW + ' Web Workers';
+
+  const EVAL_SEEDS = Array.from({ length: 300 }, (_, i) => 900000 + i);
+  const benchRows = {};
+  function renderBench() {
+    const order = ['rl', 'live', 'rule', 'noop'].filter((k) => benchRows[k]);
+    const maxV = Math.max(...order.map((k) => benchRows[k].violRate), 0.01);
+    $('bench').innerHTML = order.map((k) => {
+      const r = benchRows[k];
+      return '<tr><td><span class="dot" style="background:' + POL[k].color + '"></span>' + POL[k].name + '</td>' +
+        '<td class="mono">' + (100 * r.violRate).toFixed(1) + '% <span style="color:var(--muted)">(' + r.viol + '/' + r.nConj + ')</span><div class="bar"><span style="width:' + (100 * r.violRate / maxV).toFixed(1) + '%;background:var(--threat)"></span></div></td>' +
+        '<td class="mono">' + r.dv.toFixed(2) + ' m/s</td><td class="mono">' + (r.slot * 1000).toFixed(0) + ' m</td><td class="mono">' + r.ret.toFixed(1) + '</td></tr>';
+    }).join('');
+  }
+  async function runBench() {
+    const t0 = performance.now();
+    const [rl, rule, noop] = await Promise.all([
+      call(pool[0], { type: 'eval', policy: 'mlp', theta: Array.from(thetaRL), seeds: EVAL_SEEDS }),
+      call(pool[1 % nW], { type: 'eval', policy: 'rule', seeds: EVAL_SEEDS }),
+      call(pool[2 % nW], { type: 'eval', policy: 'noop', seeds: EVAL_SEEDS }),
+    ]);
+    Object.assign(benchRows, { rl, rule, noop });
+    renderBench();
+    $('benchnote').textContent = '900 episodes simulated in ' + ((performance.now() - t0) / 1000).toFixed(1) + ' s';
+    drawCurve();
+  }
+
+  // ---------- Live training ----------
+  let es = null, training = false, curve = [], evalPts = [];
+  function drawCurve() {
+    const { ctx, w, h } = fit($('curve'));
+    ctx.clearRect(0, 0, w, h);
+    const L = 44, R = w - 10, T = 10, B = h - 22;
+    const refs = [['rule', COL.rule], ['noop', COL.noop]].filter(([k]) => benchRows[k]);
+    const vals = curve.concat(refs.map(([k]) => benchRows[k].ret)).concat(evalPts.map((p) => p.ret));
+    let lo = vals.length ? Math.min(...vals) : -80, hi = vals.length ? Math.max(...vals) : 0;
+    lo = Math.floor((lo - 5) / 10) * 10; hi = Math.ceil((hi + 5) / 10) * 10;
+    const gens = Math.max(60, curve.length);
+    const X = (g) => L + (R - L) * g / gens, Y = (v) => B - (B - T) * (v - lo) / (hi - lo || 1);
+    ctx.font = MONO; ctx.fillStyle = COL.muted; ctx.strokeStyle = COL.line; ctx.lineWidth = 1;
+    const step = (hi - lo) > 60 ? 20 : 10;
+    for (let v = lo; v <= hi; v += step) { ctx.beginPath(); ctx.moveTo(L, Y(v)); ctx.lineTo(R, Y(v)); ctx.stroke(); ctx.fillText(String(v), 4, Y(v) + 4); }
+    ctx.fillText('generation', R - 70, h - 6); ctx.fillText('0', L, h - 6); ctx.fillText(String(gens), R - 24, h - 6);
+    refs.forEach(([k, c]) => { ctx.strokeStyle = c; ctx.setLineDash([5, 4]); ctx.beginPath(); ctx.moveTo(L, Y(benchRows[k].ret)); ctx.lineTo(R, Y(benchRows[k].ret)); ctx.stroke(); ctx.setLineDash([]); ctx.fillStyle = c; ctx.fillText(POL[k].name, L + 4, Y(benchRows[k].ret) - 4); });
+    if (curve.length) {
+      ctx.strokeStyle = COL.rl; ctx.globalAlpha = 0.45; ctx.lineWidth = 1; ctx.beginPath();
+      curve.forEach((v, i) => { i ? ctx.lineTo(X(i + 1), Y(v)) : ctx.moveTo(X(i + 1), Y(v)); }); ctx.stroke(); ctx.globalAlpha = 1;
+    }
+    if (evalPts.length) {
+      ctx.strokeStyle = COL.rl; ctx.lineWidth = 2; ctx.beginPath();
+      evalPts.forEach((p, i) => { i ? ctx.lineTo(X(p.g), Y(p.ret)) : ctx.moveTo(X(p.g), Y(p.ret)); }); ctx.stroke();
+      const p = evalPts[evalPts.length - 1]; ctx.fillStyle = COL.rl; ctx.beginPath(); ctx.arc(X(p.g), Y(p.ret), 3.5, 0, Math.PI * 2); ctx.fill();
+    }
+    if (!curve.length) { ctx.fillStyle = COL.muted; ctx.font = '13px "IBM Plex Sans", sans-serif'; ctx.fillText('Press Start training to evolve a policy from random weights.', L + 10, (T + B) / 2); }
+  }
+  async function trainLoop() {
+    while (training) {
+      const { envSeeds, epsSeeds } = es.jobs();
+      const chunks = pool.map((_, i) => epsSeeds.filter((_, k) => k % nW === i));
+      const theta = Array.from(es.theta);
+      const parts = await Promise.all(pool.map((w, i) => chunks[i].length ? call(w, { type: 'pairs', theta, epsSeeds: chunks[i], sigma: es.o.sigma, envSeeds }) : Promise.resolve([])));
+      const res = [];
+      chunks.forEach((ch, i) => ch.forEach((s, j) => { res[epsSeeds.indexOf(s)] = parts[i][j]; }));
+      curve.push(es.update(epsSeeds, res));
+      if (es.gen % 5 === 0) {
+        const seeds = EVAL_SEEDS.slice(0, 64);
+        const r = await call(pool[0], { type: 'eval', policy: 'mlp', theta: Array.from(es.theta), seeds });
+        evalPts.push({ g: es.gen, ret: r.ret });
+        thetaLive = Float64Array.from(es.theta);
+        benchRows.live = Object.assign({}, r, { partial: true });
+        $('p-live').disabled = false;
+        $('trainstat').textContent = 'gen ' + es.gen + ' · held-out return ' + r.ret.toFixed(1) + ' · violations ' + (100 * r.violRate).toFixed(1) + '%';
+        renderBench();
+      } else {
+        $('trainstat').textContent = 'gen ' + es.gen + ' · population mean ' + curve[curve.length - 1].toFixed(1);
+      }
+      drawCurve();
+    }
+  }
+  $('train').addEventListener('click', () => {
+    if (training) return;
+    if (!es) { es = new KG.ES({ pairs: 48, sigma: 0.04, lr: 0.02, episodes: 8, seed: 1 + Math.floor(Math.random() * 1000) }); curve = []; evalPts = []; }
+    training = true; $('train').disabled = true; $('stoptrain').disabled = false; $('train').textContent = 'Training…';
+    trainLoop();
+  });
+  $('stoptrain').addEventListener('click', () => { training = false; $('train').disabled = false; $('stoptrain').disabled = true; $('train').textContent = 'Resume training'; });
+
+  // ---------- Boot ----------
+  window.addEventListener('resize', drawCurve);
+  initGlobe();
+  setPolicy('rl');
+  drawCurve();
+  runBench();
+  requestAnimationFrame(frame);
+})();
+</script>
