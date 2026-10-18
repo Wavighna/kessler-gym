@@ -370,6 +370,25 @@ button.linkish:hover { background:none; color:var(--fg); }
 .stack-mark { height:0; }
 @media(max-width:760px){ .scene { padding:28px 18px; border-radius:28px; margin-bottom:24vh; } }
 @media(prefers-reduced-motion:reduce){ .scene { position:relative; top:auto; margin-bottom:10vh; } }
+
+html { scroll-behavior:auto !important; }
+
+/* Presenter guide bar */
+.beat-hud { position:fixed; left:50%; bottom:22px; transform:translateX(-50%); z-index:45; display:flex; align-items:center; gap:14px; padding:10px 12px 10px 10px; border-radius:999px; background:rgba(12,19,23,.9); box-shadow:0 20px 50px rgba(0,0,0,.6), inset 0 1px 0 rgba(255,255,255,.07); backdrop-filter:blur(14px); -webkit-backdrop-filter:blur(14px); max-width:calc(100vw - 32px); transition:opacity .3s, transform .3s; }
+.beat-hud.hide { opacity:0; pointer-events:none; transform:translate(-50%,20px); }
+.beat-hud.pop .hud-text { animation:hudIn .5s cubic-bezier(.2,.8,.2,1); }
+@keyframes hudIn { from { opacity:0; transform:translateY(6px); } to { opacity:1; transform:none; } }
+.hud-text { display:flex; flex-direction:column; min-width:0; }
+.hud-step { font:600 10px var(--f-mono); letter-spacing:.14em; text-transform:uppercase; color:var(--amber); }
+.hud-line { font-size:14px; color:var(--fg); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.hud-arrow { width:40px; height:40px; min-height:40px; padding:0; border-radius:50%; font-size:16px; flex:none; }
+.hud-dots { display:flex; gap:5px; }
+.hud-dots i { width:6px; height:6px; border-radius:50%; background:#33434c; cursor:pointer; }
+.hud-dots i.on { background:var(--safe); width:18px; border-radius:3px; }
+@media(max-width:700px){ .hud-dots { display:none; } .hud-line { white-space:normal; font-size:12.5px; } .beat-hud { bottom:12px; } }
+
+.scene { padding-bottom:104px; }
+@media(max-width:760px){ .scene { padding-bottom:120px; } }
 </style>
 
 <div class="progress" id="progress" aria-hidden="true"></div>
@@ -925,7 +944,7 @@ const PRETRAINED = /*__WEIGHTS__*/;
     }
     const frac = running && !finished ? Math.min(1, acc) : 0;
     drawGlobe((env.t + frac) * DT);
-    drawBplane(); drawHill(); drawTimeline(); drawTiles(); tourTick();
+    drawBplane(); drawHill(); drawTimeline(); drawTiles(); tourTick(); renderHud();
     requestAnimationFrame(frame);
   }
 
@@ -1066,9 +1085,104 @@ const PRETRAINED = /*__WEIGHTS__*/;
     SCENES.forEach((el) => el.style.setProperty('--top', Math.min(NAV, innerHeight - el.offsetHeight - 16) + 'px'));
   }
   const pageY = (el) => el.getBoundingClientRect().top + scrollY;
+
+  // ---------- Section lock: one gesture = one stop ----------
+  // Stops are where a card has fully arrived. Tall cards get extra stops so nothing in the middle is skipped.
+  let STOPS = [], gliding = false, lastWheel = 0, glideEnd = 0;
+  // Presenter beats: one or two things on screen, a title and one line to say, then ↓ for the next.
+  const BEATS = [
+    { scene: 'overview', at: 'start', title: 'The problem', line: 'Space junk is multiplying. We built an AI pilot that dodges it.' },
+    { scene: 'mission', at: 'start', title: 'Live mission', line: 'Globe = our orbit. Radar = keep the amber dot out of the red bubble.' },
+    { scene: 'mission', at: 'end', title: 'Flight data', line: 'How far it drifted from its orbit, and every burn it made.' },
+    { scene: 'results', at: 'start', title: 'Results', line: '300 scenarios it never saw: best overall score, honest caveats.' },
+    { scene: 'train', at: 'start', title: 'Watch it learn', line: 'Training from scratch, live in this browser. No server.' },
+  ];
+  function beatY(b) {
+    const i = SCENES.findIndex((x) => x.dataset.scene === b.scene), el = SCENES[i];
+    if (i === 0 && b.at === 'start') return 0;
+    const top = parseFloat(el.style.getPropertyValue('--top')) || NAV;
+    return b.at === 'end' ? pageY(MARKS[i]) - top : pageY(MARKS[i]) - NAV;
+  }
+  function computeStops() {
+    const maxY = document.documentElement.scrollHeight - innerHeight, view = innerHeight - NAV;
+    const ys = BEATS.map(beatY);
+    // Extra stops only inside a tall card (never in the gap where the next card slides in),
+    // so every part of it gets shown before moving on.
+    const extra = [];
+    SCENES.forEach((el, i) => {
+      const a = i === 0 ? 0 : pageY(MARKS[i]) - NAV, top = parseFloat(el.style.getPropertyValue('--top')) || NAV, b = pageY(MARKS[i]) - top;
+      for (let z = a + view * 0.85; z < b - 60; z += view * 0.85) extra.push(z);
+      if (b - a > 60) extra.push(b);
+    });
+    STOPS = [...new Set(ys.concat(extra).map((y) => Math.round(Math.max(0, Math.min(maxY, y)))))].sort((a, b) => a - b);
+    BEAT_Y = ys.map((y) => Math.round(Math.max(0, Math.min(maxY, y))));
+  }
+  let BEAT_Y = [];
+  function currentBeat() { let k = 0; BEAT_Y.forEach((y, i) => { if (scrollY >= y - 30) k = i; }); return k; }
+  const hud = document.createElement('div'); hud.className = 'beat-hud'; hud.setAttribute('aria-live', 'polite');
+  document.body.append(hud);
+  let hudBeat = -1;
+  function renderHud() {
+    if (!BEAT_Y.length) computeStops();
+    const k = currentBeat(), last = k === BEATS.length - 1;
+    hud.classList.toggle('hide', tourIdx >= 0);
+    if (k === hudBeat) return; hudBeat = k;
+    const b = BEATS[k];
+    hud.innerHTML = '<button class="hud-arrow" data-beat="' + (k - 1) + '" aria-label="Previous"' + (k ? '' : ' disabled') + '>↑</button>' +
+      '<div class="hud-text"><span class="hud-step">' + (k + 1) + ' / ' + BEATS.length + ' · ' + b.title + '</span><span class="hud-line">' + b.line + '</span></div>' +
+      '<div class="hud-dots">' + BEATS.map((_, i) => '<i data-beat="' + i + '" class="' + (i === k ? 'on' : '') + '"></i>').join('') + '</div>' +
+      '<button class="hud-arrow primary" data-beat="' + (k + 1) + '" aria-label="Next"' + (last ? ' disabled' : '') + '>' + (last ? '✓' : '↓') + '</button>';
+    hud.classList.remove('pop'); void hud.offsetWidth; hud.classList.add('pop');
+  }
+  hud.addEventListener('click', (e) => { const t = e.target.closest('[data-beat]'); if (!t || t.disabled) return; computeStops(); const k = +t.dataset.beat; if (BEAT_Y[k] !== undefined) glide(BEAT_Y[k]); });
+  function glide(y, dur) {
+    y = Math.max(0, Math.min(document.documentElement.scrollHeight - innerHeight, Math.round(y)));
+    const y0 = scrollY, d = y - y0, t0 = performance.now(); dur = reduceMotion ? 0 : (dur || 950);
+    if (!d) return;
+    gliding = true;
+    const ease = (k) => (k < 0.5 ? 4 * k * k * k : 1 - Math.pow(-2 * k + 2, 3) / 2);
+    const step = (now) => {
+      const k = dur ? Math.min(1, (now - t0) / dur) : 1;
+      scrollTo(0, y0 + d * ease(k));
+      if (k < 1) requestAnimationFrame(step); else { gliding = false; glideEnd = performance.now(); }
+    };
+    requestAnimationFrame(step);
+  }
+  function stepStop(dir) {
+    computeStops();
+    const y = scrollY;
+    const t = dir > 0 ? STOPS.find((s) => s > y + 4) : [...STOPS].reverse().find((s) => s < y - 4);
+    if (t !== undefined) glide(t);
+  }
+  const typing = () => /INPUT|TEXTAREA|SELECT/.test(document.activeElement && document.activeElement.tagName);
+  addEventListener('wheel', (e) => {
+    if (e.ctrlKey) return; // pinch-zoom
+    e.preventDefault();
+    const now = performance.now(), gap = now - lastWheel; lastWheel = now;
+    // one move per gesture: ignore trackpad momentum (a continuous stream of events) and anything mid-glide
+    if (gliding || gap < 160 || Math.abs(e.deltaY) < 4) return;
+    stepStop(Math.sign(e.deltaY));
+  }, { passive: false });
+  addEventListener('keydown', (e) => {
+    if (typing() || e.metaKey || e.ctrlKey || e.altKey) return;
+    const k = e.key;
+    if (k === ' ' && /BUTTON|SUMMARY|A/.test(document.activeElement.tagName)) return; // let Space press the focused control
+    if (k === 'ArrowDown' || k === 'PageDown' || (k === ' ' && !e.shiftKey)) { e.preventDefault(); if (!gliding) stepStop(1); }
+    else if (k === 'ArrowUp' || k === 'PageUp' || (k === ' ' && e.shiftKey)) { e.preventDefault(); if (!gliding) stepStop(-1); }
+    else if (k === 'Home') { e.preventDefault(); glide(0); }
+    else if (k === 'End') { e.preventDefault(); glide(1e9); }
+  });
+  let touchY = null;
+  addEventListener('touchstart', (e) => { touchY = e.touches[0].clientY; }, { passive: true });
+  addEventListener('touchmove', (e) => { if (touchY !== null && !e.target.closest('#globe')) e.preventDefault(); }, { passive: false });
+  addEventListener('touchend', (e) => {
+    if (touchY === null) return;
+    const dy = touchY - e.changedTouches[0].clientY; touchY = null;
+    if (Math.abs(dy) > 40 && !gliding) stepStop(Math.sign(dy));
+  }, { passive: true });
   function showScene(name) {
     const i = SCENES.findIndex((x) => x.dataset.scene === name);
-    if (i >= 0) scrollTo({ top: Math.max(0, pageY(MARKS[i]) - NAV), behavior: 'smooth' });
+    if (i >= 0) glide(pageY(MARKS[i]) - NAV);
   }
   // Scroll to a block inside a card, centred, accounting for the card being pinned.
   function scrollToBlock(el) {
@@ -1076,7 +1190,7 @@ const PRETRAINED = /*__WEIGHTS__*/;
     const within = el.getBoundingClientRect().top - sc.getBoundingClientRect().top;
     const natural = pageY(MARKS[i]) + within;
     const y = natural - Math.max(NAV, (innerHeight - el.offsetHeight) / 2);
-    scrollTo({ top: Math.max(pageY(MARKS[i]) - NAV, y), behavior: 'smooth' });
+    glide(Math.max(pageY(MARKS[i]) - NAV, y), 800);
   }
   document.addEventListener('click', (e) => { const g = e.target.closest('[data-go]'); if (g) { e.preventDefault(); showScene(g.dataset.go); } });
   const bar = $('progress');
@@ -1093,12 +1207,13 @@ const PRETRAINED = /*__WEIGHTS__*/;
       el.style.transform = p ? 'scale(' + (1 - 0.07 * p) + ') translateY(' + (-12 * p) + 'px)' : '';
       el.lastElementChild.style.opacity = (0.65 * p).toFixed(3);
     });
+    renderHud();
     const name = SCENES[cur].dataset.scene;
     if (name !== scene) { scene = name; }
     document.querySelectorAll('.scene-tabs a').forEach((a) => a.classList.toggle('on', a.dataset.go === scene));
   }
   addEventListener('scroll', onScroll, { passive: true });
-  addEventListener('resize', () => { layoutStack(); onScroll(); });
+  addEventListener('resize', () => { layoutStack(); computeStops(); hudBeat = -1; onScroll(); });
   if ('ResizeObserver' in window) { const ro = new ResizeObserver(() => { layoutStack(); onScroll(); }); SCENES.forEach((el) => ro.observe(el)); }
   layoutStack();
 
