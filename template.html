@@ -1,6 +1,10 @@
+<!doctype html>
+<html lang="en">
 <meta charset="utf-8">
-<title>Kessler Gym</title>
-<meta name="claude:viewport-fit-sides" content="cover">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="Explore satellite collision avoidance with Kessler. Compare autonomous control and operator rules in an interactive orbital simulation.">
+<title>Kessler — Mission Control</title>
+<meta name="theme-color" content="#0b1014">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Saira+Condensed:wght@500;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
 <style>
@@ -86,87 +90,191 @@ pre.eq { font-family: var(--f-mono); font-size: 12px; color: var(--fg); backgrou
 @media (max-width: 980px) { .grid, .explain { grid-template-columns: minmax(0, 1fr); } }
 @media (max-width: 520px) { h1 { font-size: 34px; } .tiles { grid-template-columns: repeat(2, minmax(0, 1fr)); } #hill, #timeline { aspect-ratio: 2 / 1; } }
 @media (prefers-reduced-motion: reduce) { * { scroll-behavior: auto; } }
+
+/* Product interface: mission first, research on demand. */
+* { box-sizing: border-box; }
+:root { --ink:#0b1014; --panel:#11191f; --panel-2:#182229; --line:#26333c; --fg:#edf3f5; --muted:#9aadb9; --safe:#8de0bc; --amber:#ebbd78; --rl:#83c5df; --f-display:"IBM Plex Sans",system-ui,sans-serif; }
+html { scroll-behavior:smooth; scroll-padding-top:24px; }
+body { margin:0; font-size:14px; }
+a { color:inherit; text-decoration:none; }
+a:focus-visible,summary:focus-visible { outline:2px solid var(--amber); outline-offset:5px; }
+.wrap { max-width:1440px; padding:0 40px 40px; gap:24px; }
+.topbar { display:flex; align-items:center; justify-content:space-between; gap:24px; padding:24px 0; border-bottom:1px solid var(--line); }
+.brand { font-size:21px; font-weight:600; letter-spacing:.13em; display:flex; align-items:center; gap:12px; }
+.brand-mark { display:inline-block; width:25px; height:25px; border:1px solid var(--safe); border-radius:50%; position:relative; transform:rotate(-35deg); }
+.brand-mark:before { content:""; position:absolute; inset:8px -5px; border:1px solid var(--safe); border-radius:50%; }
+.brand-mark:after { content:""; position:absolute; width:5px; height:5px; border-radius:50%; background:var(--safe); right:-2px; top:8px; }
+.nav-links { display:flex; gap:28px; font-size:13px; color:var(--muted); }
+.nav-links a:hover { color:var(--fg); }
+.demo-badge,.orbit-badge { display:inline-flex; align-items:center; gap:8px; font-size:11px; letter-spacing:.09em; text-transform:uppercase; color:var(--safe); }
+.demo-badge:before { content:""; width:6px; height:6px; border-radius:50%; background:var(--safe); }
+header { border:0; padding:12px 0 0; align-items:center; }
+.eyebrow { color:var(--safe); font:500 10px var(--f-mono); letter-spacing:.16em; text-transform:uppercase; margin:0 0 12px; }
+h1 { text-transform:none; font-size:clamp(28px,3.2vw,42px); letter-spacing:-.045em; font-weight:500; line-height:1.15; }
+.sub { font-size:14px; margin-top:10px; max-width:68ch; line-height:1.7; }
+h2 { font:500 11px var(--f-mono); letter-spacing:.09em; }
+h3 { font-size:16px; font-weight:500; letter-spacing:-.02em; }
+.panel { padding:22px; border-radius:12px; gap:16px; }
+.panel-head { align-items:center; }
+.section-label { display:flex; justify-content:space-between; align-items:center; gap:12px; }
+.section-label p { margin:5px 0 0; }
+.section-number { color:var(--safe); margin-right:8px; font:11px var(--f-mono); }
+.grid { gap:20px; grid-template-columns:minmax(0,1.55fr) minmax(0,1fr); }
+.mission-grid { align-items:stretch; }
+.mission-grid > .panel:first-child { padding-bottom:16px; }
+#globe { aspect-ratio:1.65; border-radius:8px; }
+#bplane { aspect-ratio:1.85; }
+.mission-grid .legend { font-size:10px; gap:10px; }
+.mission-grid .legend i { width:6px; height:6px; }
+.globe-caption { display:flex; justify-content:space-between; gap:16px; align-items:center; padding-top:12px; border-top:1px solid var(--line); }
+.globe-caption .note { font-size:11px; }
+.tiles { grid-template-columns:repeat(6,minmax(0,1fr)); gap:0; border:1px solid var(--line); border-radius:12px; background:var(--panel); padding:18px 0; }
+.tile { border:0; border-radius:0; background:none; padding:0 22px; border-right:1px solid var(--line); }
+.tile:last-child { border:0; }
+.tile .k { font-size:9px; letter-spacing:.1em; }
+.tile .v { font-size:23px; letter-spacing:-.05em; margin-top:7px; }
+.controller-panel { padding:16px 20px; gap:12px; }
+.controls { gap:12px; }
+.controller-label { margin-right:8px; }
+.seg { background:var(--ink); border-radius:7px; padding:3px; gap:3px; border:1px solid var(--line); }
+.seg button { border:0; border-radius:4px; background:transparent; color:var(--muted); padding:8px 13px; }
+button { border-radius:6px; padding:9px 13px; font-size:12px; min-height:36px; }
+button[aria-pressed="true"] { box-shadow:none; background:#28403d; color:var(--safe); }
+button.primary { background:var(--safe); border-color:var(--safe); color:#10251e; }
+button.primary:hover { background:#b0efd3; }
+button[data-p="live"]:disabled { display:none; }
+.control-divider { width:1px; height:24px; background:var(--line); margin:0 2px; }
+.controller-foot { display:flex; flex-wrap:wrap; justify-content:space-between; gap:6px 20px; border-top:1px solid var(--line); padding-top:12px; }
+.controller-foot .note { font-size:11px; }
+label { font-size:11px; }
+input[type="range"] { width:78px; accent-color:var(--safe); }
+.status { max-width:360px; font-size:11px; padding:10px 13px; line-height:1.6; border-radius:7px; }
+.decision { padding-bottom:17px; border-bottom:1px solid var(--line); }
+.decision-title { font-size:22px; font-weight:500; letter-spacing:-.04em; margin:8px 0; }
+.decision p:last-child { color:var(--muted); font-size:12px; line-height:1.7; margin:0; }
+.mission-facts { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+.mission-facts div { font-size:11px; color:var(--muted); }
+.mission-facts strong { display:block; color:var(--fg); margin-top:5px; font:13px var(--f-mono); }
+.fuel-track { height:4px; background:var(--line); border-radius:3px; overflow:hidden; margin-top:8px; }
+.fuel-track span { display:block; height:100%; background:var(--safe); width:100%; }
+.encounter-panel { gap:12px; }
+.encounter-panel .panel-head .note { font-size:10px; }
+.insight-note { border-left:2px solid var(--safe); padding:8px 12px; background:#15241f; font-size:12px; color:#b8d7c7; line-height:1.7; }
+.evidence-grid { grid-template-columns:1fr; }
+table { font-size:12px; }
+th,td { padding:12px 10px; }
+th { font-size:9px; }
+.tablewrap { max-width:100%; }
+.research { border:1px solid var(--line); border-radius:12px; background:var(--panel); }
+.research > summary { padding:20px 24px; cursor:pointer; color:var(--fg); font-size:14px; }
+.research > summary span { color:var(--muted); font-size:12px; margin-left:16px; }
+.research[open] > summary { border-bottom:1px solid var(--line); margin-bottom:20px; }
+.research-body { display:grid; gap:20px; padding:0 20px 20px; }
+.research-body > .panel { background:var(--ink); }
+.research .explain { gap:24px; }
+.research .explain p,.research .explain li { font-size:12px; line-height:1.8; }
+.research .explain h2 { margin-bottom:14px; }
+.research .explain pre { margin-bottom:12px; }
+.footer { display:flex; justify-content:space-between; gap:16px; color:var(--muted); font-size:11px; padding:8px 0; }
+.footer a { border-bottom:1px solid var(--line); }
+.notice { max-width:72ch; }
+@media(min-width:1500px) { .wrap { padding-inline:48px; } }
+@media(max-width:1050px) { .wrap { padding-inline:24px; } .grid { grid-template-columns:1fr; } .mission-grid { grid-template-columns:1.25fr 1fr; } .tile { padding:0 14px; } .tile .v { font-size:19px; } .mission-grid .panel { padding:16px; } #globe { aspect-ratio:1.15; } .nav-links { gap:16px; } }
+@media(max-width:760px) { .mission-grid { grid-template-columns:1fr; } #globe { aspect-ratio:1.65; } #bplane { aspect-ratio:1.8; } .tiles { grid-template-columns:repeat(3,minmax(0,1fr)); padding:0; } .tile { padding:16px; border-bottom:1px solid var(--line); } .tile:nth-child(3) { border-right:0; } .tile:nth-child(n+4) { border-bottom:0; } .nav-links { display:none; } .control-divider { display:none; } .footer { flex-direction:column; } .research > summary span { display:block; margin:6px 0 0 16px; } }
+@media(max-width:480px) { .wrap { padding-inline:16px; gap:18px; } .topbar { padding:20px 0; } .brand { font-size:18px; } .demo-badge { font-size:9px; } .panel { padding:16px; } .controls { gap:10px; } .controller-label { width:100%; } .seg { width:100%; } .seg button { flex:1; padding-inline:8px; font-size:11px; } .tile { padding-inline:12px; } .tile .v { font-size:15px; } .tile .k { font-size:8px; } .globe-caption { align-items:flex-start; flex-direction:column; gap:8px; } h1 { font-size:30px; } .research-body { padding:0 12px 12px; } .research .explain { grid-template-columns:1fr; } }
+@media(prefers-reduced-motion:reduce) { html { scroll-behavior:auto; } }
+
 </style>
 
 <div class="wrap">
-  <header>
-    <div>
-      <h1>Kessler<span>·</span>Gym</h1>
-      <p class="sub">A reinforcement-learning environment for satellite collision avoidance in low Earth orbit. An agent flies a 550&nbsp;km satellite through late-notice debris conjunctions, using real Clohessy–Wiltshire relative dynamics, shrinking tracking uncertainty and a 4&nbsp;m/s fuel budget. It learns when to burn, which way, and how to return to its slot.</p>
-    </div>
-    <div class="status" id="status">Loading…</div>
+  <nav class="topbar" aria-label="Main navigation">
+    <a class="brand" href="#mission"><span class="brand-mark" aria-hidden="true"></span>KESSLER</a>
+    <div class="nav-links"><a href="#mission">Mission overview</a><a href="#compare">Policy comparison</a><a href="#research">Research lab</a></div>
+    <span class="demo-badge">Interactive simulation</span>
+  </nav>
+  <header id="mission">
+    <div><p class="eyebrow">Orbital intelligence / Mission control</p><h1>A clearer path through orbit.</h1><p class="sub">Track close approaches. Explore avoidance maneuvers. See how each decision affects your satellite's safety, fuel and orbit.</p></div>
+    <div class="status" id="status" role="status">Initializing simulation…</div>
   </header>
 
-  <section class="panel" aria-label="Simulation controls">
+  <section class="panel controller-panel" aria-label="Simulation controls">
     <div class="controls">
-      <h2>Pilot</h2>
+      <h2 class="controller-label">Flight controller</h2>
       <div class="seg" role="group" aria-label="Policy">
-        <button id="p-rl" data-p="rl" style="--sel: var(--rl)">RL agent (pretrained)</button>
-        <button id="p-live" data-p="live" style="--sel: var(--rl)" disabled>RL agent (trained here)</button>
+        <button id="p-rl" data-p="rl" style="--sel: var(--rl)">AI policy</button>
+        <button id="p-live" data-p="live" style="--sel: var(--rl)" disabled>Your trained policy</button>
         <button id="p-rule" data-p="rule" style="--sel: var(--rule)">Operator rule</button>
-        <button id="p-noop" data-p="noop" style="--sel: var(--noop)">No maneuvers</button>
+        <button id="p-noop" data-p="noop" style="--sel: var(--noop)">No avoidance</button>
       </div>
-      <button id="play">Pause</button>
+      <span class="control-divider" aria-hidden="true"></span><button id="play" class="primary">Pause</button>
       <button id="next">New scenario</button>
       <button id="replay">Replay</button>
-      <label for="speed">Speed <input id="speed" type="range" min="2" max="40" value="10"> <span class="mono" id="speedv">10 min/s</span></label>
-      <span class="mono note" id="seedv"></span>
+      <label for="speed">Speed <input id="speed" type="range" min="2" max="40" value="8"> <span class="mono" id="speedv">8 min/s</span></label>
     </div>
+    <div class="controller-foot"><p class="note">Switch controllers to replay the same scenario and compare the outcome.</p><span class="mono note" id="seedv"></span></div>
   </section>
 
-  <div class="grid">
-    <section class="panel">
-      <div class="panel-head">
-        <h3>LEO debris field</h3>
-        <div class="legend"><span><i style="background: var(--amber)"></i>Our satellite, 550 km / 53°</span><span><i style="background: #5d6f93"></i>Tracked objects (simulated shells)</span><span><i style="background: var(--threat)"></i>Active conjunction</span></div>
-      </div>
-      <canvas id="globe"></canvas>
-      <p class="note">Drag to rotate. Debris shells follow the real LEO population structure: Starlink-like 53° at 550 km, sun-synchronous 97–99° at 700–850 km, Iridium 86° at 780 km, and the 1,200 km shell. Each point is propagated on its own Keplerian orbit in a vertex shader.</p>
-    </section>
-
-    <section class="panel">
-      <div class="panel-head">
-        <h3>Encounter B-plane</h3>
-        <span class="mono note" id="bpinfo">–</span>
-      </div>
-      <canvas id="bplane"></canvas>
-      <div class="legend"><span><i style="background: var(--threat)"></i>200 m keep-out around debris</span><span><i style="background: var(--amber)"></i>Predicted miss ± 1σ / 3σ</span><span><i style="background: transparent; border: 1px solid var(--noop)"></i>Miss with no maneuver</span></div>
       <div class="tiles">
         <div class="tile"><div class="k">Mission clock</div><div class="v" id="t-clock">T+00:00</div></div>
-        <div class="tile"><div class="k">Δv used</div><div class="v" id="t-dv">0.000 m/s</div></div>
-        <div class="tile"><div class="k">Slot error</div><div class="v" id="t-slot">0 m</div></div>
-        <div class="tile"><div class="k">Highest Pc</div><div class="v" id="t-pc">–</div></div>
-        <div class="tile"><div class="k">Cleared</div><div class="v" id="t-ok" style="color: var(--safe)">0</div></div>
-        <div class="tile"><div class="k">Violations</div><div class="v" id="t-bad" style="color: var(--threat)">0</div></div>
+        <div class="tile"><div class="k">Fuel spent · Δv</div><div class="v" id="t-dv">0.000 m/s</div></div>
+        <div class="tile"><div class="k">Orbit deviation</div><div class="v" id="t-slot">0 m</div></div>
+        <div class="tile"><div class="k">Collision probability</div><div class="v" id="t-pc">–</div></div>
+        <div class="tile"><div class="k">Safely passed</div><div class="v" id="t-ok" style="color: var(--safe)">0</div></div>
+        <div class="tile"><div class="k">Unsafe passes</div><div class="v" id="t-bad" style="color: var(--threat)">0</div></div>
       </div>
+
+  <div class="grid mission-grid">
+    <section class="panel">
+      <div class="panel-head">
+        <h3><span class="section-number">01</span>Orbital overview</h3>
+        <div class="legend"><span><i style="background: var(--amber)"></i>Our satellite, 550 km / 53°</span><span><i style="background: #5d6f93"></i>Tracked objects (simulated shells)</span><span><i style="background: var(--threat)"></i>Active conjunction</span></div>
+      </div>
+      <canvas id="globe" aria-label="Interactive 3D view of Earth, satellite and simulated debris"></canvas>
+      <div class="globe-caption"><span class="orbit-badge">LEO / 550 km / 53°</span><p class="note">Drag to explore · 6,000 simulated debris objects</p></div>
+    </section>
+
+    <section class="panel encounter-panel">
+      <div class="decision"><p class="eyebrow">Encounter assessment</p><h3 class="decision-title" id="decision-title">Monitoring your orbit</h3><p id="decision-copy">Tracking the next close approach.</p></div>
+      <div class="mission-facts"><div>Next closest approach<strong id="next-approach">—</strong></div><div>Fuel remaining<strong id="fuel-left">4.00 m/s</strong><div class="fuel-track"><span id="fuel-bar"></span></div></div></div>
+      <div class="panel-head">
+        <h3>Close-approach geometry</h3>
+        <span class="mono note" id="bpinfo">–</span>
+      </div>
+      <canvas id="bplane" aria-label="Predicted satellite miss distance and uncertainty around the debris keep-out zone"></canvas>
+      <div class="legend"><span><i style="background: var(--threat)"></i>200 m keep-out zone</span><span><i style="background: var(--amber)"></i>Predicted pass + uncertainty</span><span><i style="background: transparent; border: 1px solid var(--noop)"></i>Pass without avoidance</span></div>
+
     </section>
   </div>
 
   <div class="grid">
     <section class="panel">
-      <div class="panel-head"><h3>Relative motion in the Hill frame</h3><span class="note">along-track (x-axis) vs radial (y-axis), metres from the assigned slot</span></div>
+      <div class="panel-head"><h3>Orbit deviation</h3><span class="note">Position relative to your assigned orbit · metres</span></div>
       <canvas id="hill"></canvas>
     </section>
     <section class="panel">
-      <div class="panel-head"><h3>Conjunction timeline</h3><span class="note">tracked window → TCA, and each burn</span></div>
+      <div class="panel-head"><h3>Encounter timeline</h3><span class="note">Tracking windows, closest approaches and burns</span></div>
       <canvas id="timeline"></canvas>
     </section>
   </div>
 
-  <div class="grid">
+  <div class="section-label" id="compare"><div><p class="eyebrow">Measure the trade-offs</p><h3>One mission. Three ways to fly.</h3><p class="note">Compare safety, fuel use and orbit keeping on the same 300 evaluation scenarios.</p></div></div>
+  <div class="grid evidence-grid">
     <section class="panel">
-      <div class="panel-head"><h3>Benchmark on 300 held-out scenarios</h3><span class="note" id="benchnote">running in a Web Worker…</span></div>
+      <div class="panel-head"><h3>Policy performance</h3><span class="note" id="benchnote">running in a Web Worker…</span></div>
       <div class="tablewrap">
         <table>
           <thead><tr><th>Policy</th><th>Keep-out violations</th><th>Mean Δv per episode</th><th>Mean slot error</th><th>Episode return</th></tr></thead>
           <tbody id="bench"></tbody>
         </table>
       </div>
-      <p class="note">Every scenario has 2–5 debris objects aimed inside 1σ = 180 m of the satellite, detected 15–60 minutes before closest approach. "Operator rule" is a standard collision-avoidance procedure: wait for the 25-minute decision point, burn if Pc &gt; 10⁻⁴ until the predicted miss clears R + 2.5σ, then fly back to the slot with a two-impulse CW transfer.</p>
+      <p class="note">Simulated encounters, not live tracking data. Lower violations, fuel use and orbit deviation are better; higher return is better. The AI optimizes the combined objective, so it does not necessarily win on safety alone.</p>
     </section>
 
+  </div>
+
+  <details class="research" id="research"><summary>Research lab <span>Train your own policy and explore the physics</span></summary><div class="research-body">
     <section class="panel">
-      <div class="panel-head"><h3>Train an agent from scratch</h3><span class="mono note" id="trainstat">idle</span></div>
+      <div class="panel-head"><h3>Train your own controller</h3><span class="mono note" id="trainstat">idle</span></div>
       <div class="controls">
         <button class="primary" id="train">Start training</button>
         <button id="stoptrain" disabled>Stop</button>
@@ -175,10 +283,9 @@ pre.eq { font-family: var(--f-mono); font-size: 12px; color: var(--fg); backgrou
       <canvas id="curve"></canvas>
       <p class="note">Evolution Strategies (Salimans et al., 2017) with antithetic sampling, centred-rank fitness shaping and Adam. Each worker receives only the parameter vector and integer noise seeds, rebuilds the perturbations locally and returns two numbers, so communication cost is independent of network size. Dashed lines show the baselines' return on the same scale.</p>
     </section>
-  </div>
 
   <section class="panel">
-    <h3>How it works</h3>
+    <h3>Under the hood</h3>
     <div class="explain">
       <div>
         <h2>Environment</h2>
@@ -203,6 +310,8 @@ n = √(μ/r³) = 1.10e-3 rad/s   r = 6,928 km</pre>
       </div>
     </div>
   </section>
+  </div></details>
+  <footer class="footer"><span class="notice">Research prototype · Simulated scenarios · Not for operational flight decisions</span><a href="https://github.com/Wavighna/kessler-gym" target="_blank" rel="noopener noreferrer">Explore the source ↗</a></footer>
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
@@ -225,10 +334,10 @@ const PRETRAINED = /*__WEIGHTS__*/;
   const thetaRL = Float64Array.from(PRETRAINED.theta);
   let thetaLive = null;
   const POL = {
-    rl: { name: 'RL agent (pretrained)', color: COL.rl, act: (o) => KG.mlpAct(thetaRL, o) },
-    live: { name: 'RL agent (trained here)', color: COL.rl, act: (o) => KG.mlpAct(thetaLive, o) },
+    rl: { name: 'AI policy', color: COL.rl, act: (o) => KG.mlpAct(thetaRL, o) },
+    live: { name: 'Your trained policy', color: COL.rl, act: (o) => KG.mlpAct(thetaLive, o) },
     rule: { name: 'Operator rule', color: COL.rule, act: (o, env) => KG.rulePolicy(env) },
-    noop: { name: 'No maneuvers', color: COL.noop, act: () => [0, 0, 0] },
+    noop: { name: 'No avoidance', color: COL.noop, act: () => [0, 0, 0] },
   };
   let polKey = 'rl';
 
@@ -236,6 +345,7 @@ const PRETRAINED = /*__WEIGHTS__*/;
   let env, obs, seed = 424242, traj, burns, trails, finished, running = true, endPause = 0;
   function newEpisode(s) {
     seed = s;
+    acc = 0; telemetryKey = '';
     env = new KG.Env();
     obs = env.reset(seed);
     traj = [env.p.slice()]; burns = []; trails = {}; finished = null;
@@ -385,7 +495,11 @@ const PRETRAINED = /*__WEIGHTS__*/;
   }
 
   // ---------- Telemetry ----------
+  let telemetryKey = '';
   function drawTiles() {
+    const key = [seed, polKey, env.t, !!finished].join(':');
+    if (key === telemetryKey) return;
+    telemetryKey = key;
     $('t-clock').textContent = fmtClock(env.t * DT);
     $('t-dv').textContent = env.dvUsed.toFixed(3) + ' m/s';
     $('t-slot').textContent = KG.vec.norm(env.p).toFixed(0) + ' m';
@@ -396,6 +510,17 @@ const PRETRAINED = /*__WEIGHTS__*/;
     let ok = 0, bad = 0;
     env.conj.forEach((k) => { if (k.done) (k.viol ? bad++ : ok++); });
     $('t-ok').textContent = ok; $('t-bad').textContent = bad;
+    const next = (env.lastAssess || [])[0];
+    $('next-approach').textContent = next ? Math.max(0, Math.ceil(next.tau / 60)) + ' min · Object ' + (next.k.id + 1) : finished ? 'Mission complete' : 'Scanning';
+    $('fuel-left').textContent = Math.max(0, env.fuel).toFixed(2) + ' / ' + C.FUEL.toFixed(1) + ' m/s';
+    $('fuel-bar').style.width = Math.max(0, Math.min(100, env.fuel / C.FUEL * 100)) + '%';
+    $('fuel-bar').style.background = env.fuel < C.FUEL * 0.2 ? COL.threat : COL.safe;
+    $('decision-title').textContent = finished ? (bad ? 'Mission review needed' : 'Scenario complete') : pc > 1e-4 ? 'Elevated collision risk' : next ? 'Close approach tracked' : 'Monitoring your orbit';
+    $('decision-title').style.color = pc > 1e-4 || (finished && bad) ? COL.threat : COL.fg;
+    $('decision-copy').textContent = finished
+      ? ok + ' safely passed · ' + bad + ' unsafe passes. Replay this scenario with another controller to compare the trade-offs.'
+      : next ? POL[polKey].name + ' is controlling this simulated mission. ' + (pc > 1e-4 ? 'Predicted collision probability exceeds the operator threshold of 1 in 10,000.' : 'Watch the predicted pass and uncertainty change as tracking improves.')
+      : 'No detected encounter is active. Monitoring the satellite\'s orbit.';
     const st = $('status');
     if (finished) { st.className = 'status ' + (bad ? 'alert' : 'ok'); st.textContent = POL[polKey].name + ': ' + ok + ' cleared, ' + bad + ' violated, Δv ' + env.dvUsed.toFixed(2) + ' m/s'; }
     else if (pc > 1e-4) { st.className = 'status alert'; st.textContent = 'High-risk conjunction · Pc ' + pc.toExponential(1); }
@@ -528,7 +653,7 @@ const PRETRAINED = /*__WEIGHTS__*/;
     const dtReal = Math.min(0.1, (now - lastT) / 1000); lastT = now;
     if (running) {
       if (finished) {
-        if (now - finished > 3500) newEpisode(1 + Math.floor(Math.random() * 899999));
+        // Hold the result until Replay, a controller switch, or New scenario.
       } else {
         acc += dtReal * +speedEl.value;
         while (acc >= 1 && env.t < TMAX) { simStep(); acc -= 1; }
@@ -571,7 +696,7 @@ const PRETRAINED = /*__WEIGHTS__*/;
     const maxV = Math.max(...order.map((k) => benchRows[k].violRate), 0.01);
     $('bench').innerHTML = order.map((k) => {
       const r = benchRows[k];
-      return '<tr><td><span class="dot" style="background:' + POL[k].color + '"></span>' + POL[k].name + '</td>' +
+      return '<tr><td><span class="dot" style="background:' + POL[k].color + '"></span>' + POL[k].name + (r.partial ? ' <small>(64 scenarios)</small>' : '') + '</td>' +
         '<td class="mono">' + (100 * r.violRate).toFixed(1) + '% <span style="color:var(--muted)">(' + r.viol + '/' + r.nConj + ')</span><div class="bar"><span style="width:' + (100 * r.violRate / maxV).toFixed(1) + '%;background:var(--threat)"></span></div></td>' +
         '<td class="mono">' + r.dv.toFixed(2) + ' m/s</td><td class="mono">' + (r.slot * 1000).toFixed(0) + ' m</td><td class="mono">' + r.ret.toFixed(1) + '</td></tr>';
     }).join('');
@@ -651,6 +776,7 @@ const PRETRAINED = /*__WEIGHTS__*/;
 
   // ---------- Boot ----------
   window.addEventListener('resize', drawCurve);
+  $('research').addEventListener('toggle', () => { if ($('research').open) drawCurve(); });
   initGlobe();
   setPolicy('rl');
   drawCurve();
@@ -658,3 +784,5 @@ const PRETRAINED = /*__WEIGHTS__*/;
   requestAnimationFrame(frame);
 })();
 </script>
+
+</html>

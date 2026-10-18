@@ -2,6 +2,12 @@
 
 Reinforcement-learning environment for satellite collision avoidance in low Earth orbit. Open `index.html` in a browser for the live demo (no install needed).
 
+## Explore the demo
+
+The mission dashboard shows the satellite, close-approach geometry, collision probability, fuel use and orbit deviation. Switch between **AI policy**, **Operator rule** and **No avoidance** to restart the same scenario with a different controller. **Replay** repeats that scenario; **New scenario** generates another. Completed missions stay on screen so you can review the outcome.
+
+The policy comparison evaluates all three controllers on the same 300 scenarios. Expand **Research lab** to train a new controller in the browser and inspect the physics. Your trained policy is evaluated separately on 64 scenarios and labeled accordingly. All encounters are simulated.
+
 ```bash
 node train.js 800   # retrain (~5 min) -> weights.json
 node build.js       # rebuild index.html
