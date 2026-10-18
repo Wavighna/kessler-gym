@@ -301,19 +301,58 @@ body:before, body:after { opacity:.9; }
 @media(max-width:760px){ .tile { border:0 !important; } }
 @media(prefers-reduced-motion:reduce){ body:before, body:after, button.big { animation:none; } }
 
+
+/* Scenes: one focus at a time. */
+.scenes { display:block; }
+.scene { display:none; flex-direction:column; gap:28px; min-height:calc(100vh - 150px); padding-bottom:12px; }
+.scene.on { display:flex; animation:sceneIn .55s cubic-bezier(.2,.8,.2,1); }
+@keyframes sceneIn { from { opacity:0; transform:translateY(14px); } to { opacity:1; transform:none; } }
+.scene[data-scene="overview"] { justify-content:center; gap:56px; }
+.scene-head { display:flex; flex-direction:column; gap:6px; }
+.scene-title { font:600 clamp(26px,2.6vw,36px) var(--f-body); letter-spacing:-.04em; color:var(--fg); text-transform:none; margin:0; }
+.scene-sub { margin:0; color:var(--muted); font-size:15px; }
+.scene-tabs a { padding:8px 14px; border-radius:999px; transition:background .2s,color .2s; }
+.scene-tabs a.on { background:rgba(141,224,188,.12); color:var(--safe); }
+.scene-nav { margin-top:auto; display:flex; justify-content:space-between; align-items:center; gap:12px; padding-top:8px; }
+.scene-nav .dots { display:flex; gap:6px; }
+.scene-nav .dots i { width:7px; height:7px; border-radius:50%; background:#2a383f; cursor:pointer; }
+.scene-nav .dots i.on { background:var(--safe); width:22px; border-radius:4px; }
+.scene-nav button { padding:12px 20px; }
+.research > summary { display:none; }
+.research { background:none !important; box-shadow:none !important; }
+.research-body { padding:0; }
+button.linkish { background:none; padding:4px 0; min-height:0; color:var(--muted); font-size:13px; }
+button.linkish:hover { background:none; color:var(--fg); }
+.footer { margin-top:8px; }
+@media(max-width:760px){ .nav-links.scene-tabs { display:flex; overflow-x:auto; gap:4px; font-size:12px; } .topbar { flex-wrap:wrap; } .demo-badge { display:none; } }
+
+/* Results toggle */
+.fulltable > summary { cursor:pointer; color:var(--muted); font-size:13px; padding:8px 0; list-style:none; }
+.fulltable > summary::before { content:"＋ "; color:var(--safe); }
+.fulltable[open] > summary::before { content:"－ "; }
+.fulltable[open] > summary { margin-bottom:16px; }
+.section-label h3 { font-size:clamp(26px,2.6vw,36px); font-weight:600; letter-spacing:-.04em; }
+/* Scroll reveal */
+.reveal { opacity:0; transform:translateY(28px) scale(.985); filter:blur(6px); transition:opacity .8s cubic-bezier(.2,.8,.2,1), transform .8s cubic-bezier(.2,.8,.2,1), filter .8s ease; transition-delay:var(--d,0ms); will-change:opacity,transform; }
+.reveal.in { opacity:1; transform:none; filter:none; }
+.steps3:before { transform-origin:left; transform:scaleX(0); transition:transform 1.4s cubic-bezier(.2,.8,.2,1) .2s; }
+.steps3.in:before { transform:scaleX(1); }
+@media(prefers-reduced-motion:reduce){ .reveal { opacity:1; transform:none; filter:none; transition:none; } .steps3:before { transform:none; } }
 </style>
 
 <div class="wrap">
   <nav class="topbar" aria-label="Main navigation">
     <a class="brand" href="#mission"><span class="brand-mark" aria-hidden="true"></span>KESSLER</a>
-    <div class="nav-links"><a href="#" data-tour>Guided demo</a><a href="#mission">Live mission</a><a href="#compare">Results</a><a href="#research">Train it yourself</a></div>
+    <div class="nav-links scene-tabs" role="tablist"><a href="#overview" data-go="overview">Overview</a><a href="#mission" data-go="mission">Live mission</a><a href="#data" data-go="data">Flight data</a><a href="#results" data-go="results">Results</a><a href="#train" data-go="train">Train it</a></div>
     <span class="demo-badge">Live simulation · runs in your browser</span>
   </nav>
+  <main class="scenes">
+  <section class="scene" data-scene="overview" data-name="Overview">
   <header class="hero">
     <div><p class="eyebrow">Autonomous collision avoidance for satellites</p><h1>An AI that teaches satellites to <em>dodge space junk.</em></h1><p class="sub">One collision at 10 km/s makes thousands more pieces of junk. Our AI pilot learns <b>when</b> to burn, <b>which way</b>, and <b>how to get home</b>.</p></div>
     <div class="hero-cta">
       <button class="primary big" data-tour><span class="play" aria-hidden="true"></span>Watch the 60-second guided demo</button>
-      <span class="hero-hint">or scroll down and fly it yourself</span>
+      <button class="hero-hint linkish" data-go="mission">or fly it yourself →</button>
       <div class="status" id="status" role="status">Initializing simulation…</div>
     </div>
   </header>
@@ -323,7 +362,10 @@ body:before, body:after { opacity:.9; }
     <div><b>2</b><div><h4>AI decides to burn</h4><p>Early is cheap. Late is certain. It learned the balance.</p></div></div>
     <div><b>3</b><div><h4>Pass safely, return home</h4><p>Outside the 200 m bubble, back to its orbit.</p></div></div>
   </div>
-  <span id="mission"></span>
+  </section>
+
+  <section class="scene" data-scene="mission" data-name="Live mission">
+  <div class="scene-head"><h2 class="scene-title">Live mission</h2><p class="scene-sub">Pick a pilot. Keep the amber dot out of the red bubble.</p></div>
 
   <section class="panel controller-panel" id="controlpanel" aria-label="Simulation controls">
     <div class="controls">
@@ -342,14 +384,6 @@ body:before, body:after { opacity:.9; }
     <div class="controller-foot"><p class="note">Switch pilots to replay the same scenario.</p><span class="mono note" id="seedv"></span></div>
   </section>
 
-      <div class="tiles">
-        <div class="tile"><div class="k">Mission clock</div><div class="v" id="t-clock">T+00:00</div></div>
-        <div class="tile"><div class="k">Fuel spent · Δv</div><div class="v" id="t-dv">0.000 m/s</div></div>
-        <div class="tile"><div class="k">Orbit deviation</div><div class="v" id="t-slot">0 m</div></div>
-        <div class="tile"><div class="k">Collision probability</div><div class="v" id="t-pc">–</div></div>
-        <div class="tile"><div class="k">Safely passed</div><div class="v" id="t-ok" style="color: var(--safe)">0</div></div>
-        <div class="tile"><div class="k">Unsafe passes</div><div class="v" id="t-bad" style="color: var(--threat)">0</div></div>
-      </div>
 
   <div class="grid mission-grid">
     <section class="panel" id="globepanel">
@@ -376,6 +410,18 @@ body:before, body:after { opacity:.9; }
     </section>
   </div>
 
+      <div class="tiles">
+        <div class="tile"><div class="k">Mission clock</div><div class="v" id="t-clock">T+00:00</div></div>
+        <div class="tile"><div class="k">Fuel spent · Δv</div><div class="v" id="t-dv">0.000 m/s</div></div>
+        <div class="tile"><div class="k">Orbit deviation</div><div class="v" id="t-slot">0 m</div></div>
+        <div class="tile"><div class="k">Collision probability</div><div class="v" id="t-pc">–</div></div>
+        <div class="tile"><div class="k">Safely passed</div><div class="v" id="t-ok" style="color: var(--safe)">0</div></div>
+        <div class="tile"><div class="k">Unsafe passes</div><div class="v" id="t-bad" style="color: var(--threat)">0</div></div>
+      </div>
+  </section>
+
+  <section class="scene" data-scene="data" data-name="Flight data">
+  <div class="scene-head"><h2 class="scene-title">Flight data</h2><p class="scene-sub">Where the satellite drifted, and when it burned.</p></div>
   <div class="grid">
     <section class="panel">
       <div class="panel-head"><h3>Orbit deviation</h3><span class="note">Position relative to your assigned orbit · metres</span></div>
@@ -387,18 +433,22 @@ body:before, body:after { opacity:.9; }
     </section>
   </div>
 
-  <section class="panel scorecard" id="scorecard">
-    <div class="panel-head"><h3>Mission scorecard: this scenario</h3><span class="note" id="score-seed"></span></div>
-    
-    <div class="tablewrap"><table><thead><tr><th>Pilot</th><th>Unsafe passes</th><th>Fuel used (Δv)</th><th>Avg. orbit deviation</th><th>Verdict</th></tr></thead><tbody id="score-body"><tr><td colspan="5" class="empty">Fly a scenario to the end to see its result.</td></tr></tbody></table></div>
   </section>
 
+  <section class="scene" data-scene="results" data-name="Results">
   <div class="section-label" id="compare"><div><p class="eyebrow">The honest average</p><h3>300 scenarios the AI never trained on.</h3><p class="note">Averages over ~1,040 unseen close approaches, computed live.</p></div></div>
   <div class="takeaway" id="takeaway">
     <div><strong id="tk-ret">—</strong><span>Best overall score vs. the operator rule</span></div>
     <div><strong id="tk-x">—</strong><span>fewer unsafe passes than doing nothing</span></div>
     <div><strong id="tk-slot">—</strong><span>from its orbit, vs. <span id="tk-slot-rule">—</span> for the rule</span></div>
   </div>
+  <section class="panel scorecard" id="scorecard">
+    <div class="panel-head"><h3>Mission scorecard: this scenario</h3><span class="note" id="score-seed"></span></div>
+    
+    <div class="tablewrap"><table><thead><tr><th>Pilot</th><th>Unsafe passes</th><th>Fuel used (Δv)</th><th>Avg. orbit deviation</th><th>Verdict</th></tr></thead><tbody id="score-body"><tr><td colspan="5" class="empty">Fly a scenario to the end to see its result.</td></tr></tbody></table></div>
+  </section>
+
+  <details class="fulltable"><summary>Show the full benchmark table</summary>
   <div class="grid evidence-grid">
     <section class="panel" id="benchpanel">
       <div class="panel-head"><h3>Policy performance</h3><span class="note" id="benchnote">running in a Web Worker…</span></div>
@@ -412,8 +462,13 @@ body:before, body:after { opacity:.9; }
     </section>
 
   </div>
+  </details>
 
-  <details class="research" id="research"><summary>Research lab <span>Train your own policy and explore the physics</span></summary><div class="research-body">
+  </section>
+
+  <section class="scene" data-scene="train" data-name="Train it">
+  <div class="scene-head"><h2 class="scene-title">Train it yourself</h2><p class="scene-sub">Evolve a pilot from random weights, live in your browser.</p></div>
+  <details class="research" id="research" open><summary>Research lab <span>Train your own policy and explore the physics</span></summary><div class="research-body">
     <section class="panel" id="trainpanel">
       <div class="panel-head"><h3>Train your own controller</h3><span class="mono note" id="trainstat">idle</span></div>
       <div class="controls">
@@ -448,6 +503,8 @@ n = √(μ/r³) = 1.10e-3 rad/s   r = 6,928 km</pre>
     </div>
   </section>
   </div></details>
+  </section>
+  </main>
   <footer class="footer"><span class="notice">Research prototype · Simulated scenarios · Not for operational flight decisions</span><a href="https://github.com/Wavighna/kessler-gym" target="_blank" rel="noopener noreferrer">Explore the source ↗</a></footer>
 </div>
 
@@ -579,6 +636,7 @@ const PRETRAINED = /*__WEIGHTS__*/;
     return a ? a.k : null;
   }
   function drawBplane() {
+    if ($('bplane').offsetWidth < 40) return; // hidden scene
     const { ctx, w, h } = fit($('bplane'));
     ctx.clearRect(0, 0, w, h);
     const cx = w / 2, cy = h / 2, span = 1300, sc = (Math.min(w, h) / 2 - 12) / span;
@@ -626,6 +684,7 @@ const PRETRAINED = /*__WEIGHTS__*/;
 
   // ---------- Hill frame ----------
   function drawHill() {
+    if ($('hill').offsetWidth < 40) return; // hidden scene
     const { ctx, w, h } = fit($('hill'));
     ctx.clearRect(0, 0, w, h);
     const spanY = 2500, sc = (w / 2 - 10) / spanY, cx = w / 2, cy = h / 2;
@@ -645,6 +704,7 @@ const PRETRAINED = /*__WEIGHTS__*/;
 
   // ---------- Timeline ----------
   function drawTimeline() {
+    if ($('timeline').offsetWidth < 40) return; // hidden scene
     const { ctx, w, h } = fit($('timeline'));
     ctx.clearRect(0, 0, w, h);
     const L = 8, R = w - 8, X = (t) => L + (R - L) * t / TMAX;
@@ -783,6 +843,7 @@ const PRETRAINED = /*__WEIGHTS__*/;
   function drawGlobe(simSec) {
     if (!G.renderer) return;
     const cv = $('globe'), r = cv.getBoundingClientRect(), d = Math.min(2, window.devicePixelRatio || 1);
+    if (r.width < 2 || r.height < 2) return;
     if (cv.width !== Math.round(r.width * d) || cv.height !== Math.round(r.height * d)) {
       G.renderer.setPixelRatio(d); G.renderer.setSize(r.width, r.height, false); G.camera.aspect = r.width / r.height; G.camera.updateProjectionMatrix();
     }
@@ -885,8 +946,10 @@ const PRETRAINED = /*__WEIGHTS__*/;
     Object.assign(benchRows, { rl, rule, noop });
     renderBench();
     $('tk-ret').textContent = rl.ret.toFixed(1) + ' vs ' + rule.ret.toFixed(1);
-    $('tk-x').textContent = (noop.violRate / Math.max(rl.violRate, 1e-6)).toFixed(1) + '×';
-    $('tk-slot').textContent = (rl.slot * 1000).toFixed(0) + ' m';
+    const tx = noop.violRate / Math.max(rl.violRate, 1e-6);
+    Object.assign($('tk-x').dataset, { count: tx.toFixed(1), dec: '1', suf: '×' }); $('tk-x').textContent = tx.toFixed(1) + '×';
+    Object.assign($('tk-slot').dataset, { count: (rl.slot * 1000).toFixed(0), suf: ' m' }); $('tk-slot').textContent = (rl.slot * 1000).toFixed(0) + ' m';
+    if (scene === 'results') { countUp($('tk-x')); countUp($('tk-slot')); }
     $('tk-slot-rule').textContent = (rule.slot * 1000).toFixed(0) + ' m';
     $('benchnote').textContent = '900 episodes simulated in ' + ((performance.now() - t0) / 1000).toFixed(1) + ' s';
     drawCurve();
@@ -895,6 +958,7 @@ const PRETRAINED = /*__WEIGHTS__*/;
   // ---------- Live training ----------
   let es = null, training = false, curve = [], evalPts = [];
   function drawCurve() {
+    if ($('curve').offsetWidth < 40) return; // hidden scene
     const { ctx, w, h } = fit($('curve'));
     ctx.clearRect(0, 0, w, h);
     const L = 44, R = w - 10, T = 10, B = h - 22;
@@ -955,6 +1019,60 @@ const PRETRAINED = /*__WEIGHTS__*/;
   });
   $('stoptrain').addEventListener('click', () => { training = false; $('train').disabled = false; $('stoptrain').disabled = true; $('train').textContent = 'Resume training'; });
 
+  // ---------- Scenes: one focus at a time ----------
+  const SCENES = [...document.querySelectorAll('.scene')];
+  let scene = null;
+  let showScene = function (name, opts) {
+    const el = SCENES.find((x) => x.dataset.scene === name) || SCENES[0];
+    if (scene === el.dataset.scene) return;
+    scene = el.dataset.scene;
+    SCENES.forEach((x) => x.classList.toggle('on', x === el));
+    document.querySelectorAll('.scene-tabs a').forEach((a) => a.classList.toggle('on', a.dataset.go === scene));
+    if (!(opts && opts.keepScroll)) window.scrollTo(0, 0);
+    if (!(opts && opts.noHash)) history.replaceState(null, '', '#' + scene);
+    if (scene === 'train' || scene === 'results') requestAnimationFrame(drawCurve);
+  };
+  SCENES.forEach((el, i) => {
+    const prev = SCENES[i - 1], next = SCENES[i + 1];
+    const nav = document.createElement('div'); nav.className = 'scene-nav';
+    nav.innerHTML = (prev ? '<button data-go="' + prev.dataset.scene + '">← ' + prev.dataset.name + '</button>' : '<span></span>') +
+      '<div class="dots">' + SCENES.map((x) => '<i data-go="' + x.dataset.scene + '" class="' + (x === el ? 'on' : '') + '" title="' + x.dataset.name + '"></i>').join('') + '</div>' +
+      (next ? '<button class="primary" data-go="' + next.dataset.scene + '">Next: ' + next.dataset.name + ' →</button>' : '<span></span>');
+    el.append(nav);
+  });
+  document.addEventListener('click', (e) => { const g = e.target.closest('[data-go]'); if (g) { e.preventDefault(); showScene(g.dataset.go); } });
+  document.addEventListener('keydown', (e) => {
+    if (tourIdx >= 0 || /INPUT|TEXTAREA/.test(document.activeElement.tagName)) return;
+    const i = SCENES.findIndex((x) => x.dataset.scene === scene);
+    if (e.key === 'ArrowRight' && SCENES[i + 1]) showScene(SCENES[i + 1].dataset.scene);
+    if (e.key === 'ArrowLeft' && SCENES[i - 1]) showScene(SCENES[i - 1].dataset.scene);
+  });
+
+  // ---------- Scroll reveal + count-up ----------
+  const REVEAL = '.hero > div, .steps3 > div, .scene-head, .controller-panel, .mission-grid > .panel, .tiles, .grid > .panel, .section-label, .takeaway > div, .scorecard, .fulltable, .research-body > .panel, .scene-nav';
+  const io = 'IntersectionObserver' in window ? new IntersectionObserver((ents) => ents.forEach((e) => {
+    if (!e.isIntersecting) return;
+    e.target.classList.add('in'); io.unobserve(e.target);
+    if (e.target.dataset.count) countUp(e.target);
+  }), { threshold: 0.12, rootMargin: '0px 0px -6% 0px' }) : null;
+  function armReveals(sceneEl) {
+    if (!io) return;
+    sceneEl.querySelectorAll(REVEAL).forEach((el, i) => {
+      el.classList.add('reveal'); el.classList.remove('in');
+      el.style.setProperty('--d', Math.min(i, 6) * 90 + 'ms');
+      io.unobserve(el); io.observe(el);
+    });
+    sceneEl.querySelectorAll('.steps3').forEach((el) => { el.classList.remove('in'); setTimeout(() => el.classList.add('in'), 250); });
+    sceneEl.querySelectorAll('[data-count]').forEach((el) => { io.unobserve(el); io.observe(el); });
+  }
+  function countUp(el) {
+    const to = +el.dataset.count, dec = +(el.dataset.dec || 0), suf = el.dataset.suf || '', t0 = performance.now(), dur = 1100;
+    const tick = (now) => { const k = Math.min(1, (now - t0) / dur), e = 1 - Math.pow(1 - k, 3); el.textContent = (to * e).toFixed(dec) + suf; if (k < 1) requestAnimationFrame(tick); };
+    requestAnimationFrame(tick);
+  }
+  const _show = showScene;
+  showScene = function (name, opts) { const prev = scene; _show(name, opts); if (scene !== prev) armReveals(SCENES.find((x) => x.dataset.scene === scene)); };
+
   // ---------- Guided demo ----------
   // A scripted walkthrough for judges. It flies one showcase scenario (#3700, picked because it shows all three
   // outcomes clearly) with each pilot, then hands over to the honest 300-scenario average.
@@ -982,7 +1100,7 @@ const PRETRAINED = /*__WEIGHTS__*/;
     { target: 'encounter', title: 'Test 2: today\'s playbook.', html: '<p>Burn when risk passes 1 in 10,000. It reacts late, so dodges are expensive.</p>', enter: () => fly('rule'), live: runLive('rule'), gate: done('rule'), wait: 'Flying… (≈15 s)' },
     { target: 'encounter', title: 'Test 3: our AI.', html: '<p>A tiny neural net, trained by trial and error. Nobody told it the rules.</p>', enter: () => fly('rl'), live: runLive('rl'), gate: done('rl'), wait: 'Flying… (≈15 s)' },
     { target: 'scorecard', title: 'Same scenario, three pilots.', html: '<p>Nothing: hit. Rule: out of fuel, still unsafe. <b>AI: all clear.</b></p>' },
-    { target: 'compare', title: 'The honest average.', html: '<p>On 300 unseen scenarios: <b>best overall score</b>, 7× safer than doing nothing. The rule still wins on violations, and that\'s our next step.</p>', enter: () => { running = false; $('play').textContent = 'Play'; } },
+    { target: 'takeaway', title: 'The honest average.', html: '<p>On 300 unseen scenarios: <b>best overall score</b>, 7× safer than doing nothing. The rule still wins on violations, and that\'s our next step.</p>', enter: () => { running = false; $('play').textContent = 'Play'; } },
     { target: 'trainpanel', title: 'Watch it learn, live.', html: '<p>Training from scratch, in your browser. No server.</p>', enter: () => { $('research').open = true; drawCurve(); if (!training) $('train').click(); } },
     { center: true, title: 'That\'s Kessler.', html: '<p>Real orbital physics, a learned pilot, honest baselines, all in one page.</p>', next: 'Explore on my own' },
   ];
@@ -1009,7 +1127,7 @@ const PRETRAINED = /*__WEIGHTS__*/;
     if ($('tour-back')) $('tour-back').onclick = () => tourGo(tourIdx - 1);
     $('tour-skip').onclick = tourEnd;
     if (s.enter) s.enter();
-    if (s.target) { $(s.target).scrollIntoView({ behavior: 'smooth', block: 'center' }); spot.style.display = ''; }
+    if (s.target) { showScene($(s.target).closest('.scene').dataset.scene, { noHash: true }); requestAnimationFrame(() => $(s.target).scrollIntoView({ behavior: 'smooth', block: 'center' })); spot.style.display = ''; }
     else spot.style.cssText = 'display:block;left:50%;top:50%;width:0;height:0;position:fixed';
     $('tour-next').focus({ preventScroll: true });
   }
@@ -1043,6 +1161,7 @@ const PRETRAINED = /*__WEIGHTS__*/;
   drawCurve();
   runBench();
   requestAnimationFrame(frame);
+  showScene((location.hash || '').slice(1) || 'overview', { noHash: true, keepScroll: true });
   if (/[?&]tour\b/.test(location.search) || location.hash === '#tour') setTimeout(() => tourGo(0), 600);
 })();
 </script>
